@@ -6031,24 +6031,25 @@ namespace nOCT
 
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\Hang\\Lab Razer\\nOCTImaq\\x64\\Debug\\nOCTImaq.dll")]
+        // [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\Hang\\Lab Razer\\nOCTImaq\\x64\\Debug\\nOCTImaq.dll")]
+        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\nOCT 20210117\\dll\\nOCTImaq.dll")]
         public static extern int InitializeImaq(char[] interfaceName0, char[] interfaceName1, int nImaqLineLength, int nLinesPerChunk, int errInfo);
 
         
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\Hang\\Lab Razer\\nOCTImaq\\x64\\Debug\\nOCTImaq.dll")]
+        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\nOCT 20210117\\dll\\nOCTImaq.dll")]
         public static extern void StartAcquisition();
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\Hang\\Lab Razer\\nOCTImaq\\x64\\Debug\\nOCTImaq.dll")]
+        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\nOCT 20210117\\dll\\nOCTImaq.dll")]
         public static extern void RealAcquisition0(int bufferIndex0, Int16[] pnTemp0);
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\Hang\\Lab Razer\\nOCTImaq\\x64\\Debug\\nOCTImaq.dll")]
+        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\nOCT 20210117\\dll\\nOCTImaq.dll")]
         public static extern void RealAcquisition1(int bufferIndex1, Int16[] pnTemp1);
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\Hang\\Lab Razer\\nOCTImaq\\x64\\Debug\\nOCTImaq.dll")]
+        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\nOCT 20210117\\dll\\nOCTImaq.dll")]
         public static extern void StopAcquisition();
 
         
