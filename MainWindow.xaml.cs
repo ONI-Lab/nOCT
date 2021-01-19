@@ -4,8 +4,8 @@
 //#define TRUEALAZAR
 #undef TRUEALAZAR
 
-//#define TRUEDAQ
-#undef TRUEDAQ
+#define TRUEDAQ
+// #undef TRUEDAQ
 
 #define TRUEIMAQ
 //#undef TRUEIMAQ
