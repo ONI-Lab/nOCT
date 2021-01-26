@@ -1880,20 +1880,29 @@ namespace nOCT
 
             threadData.mreAcquireIMAQReady.Set();
             //threadData.strAcquireIMAQThreadStatus = "r";
-            
+
             #endregion  // initialization
 
             #region main loop
 
+            /*#if TRUEIMAQ
+                        int bSuccess = 2;
+                        bSuccess = nOCTimaqWrapper.StartAcquisition(bSuccess);
+            #endif // TRUEIMAQ*/
+            
             //threadData.strAcquireIMAQThreadStatus = "s";
-            if (WaitHandle.WaitAny(pweStart) == 1)
+            if ((WaitHandle.WaitAny(pweStart) == 1) ) //&& (bSuccess == 0)
             {
-                threadData.strAcquireIMAQThreadStatus = "g";
 
-                #if TRUEIMAQ
+                //threadData.strAcquireIMAQThreadStatus = "g";
+
+#if TRUEIMAQ
 
                 // start acquisition call to dll
-                nOCTimaqWrapper.StartAcquisition();
+                // bSuccess = 0 means that the two cameras start successfully else means failed
+                //int bSuccess = 2;
+                int bSuccess = 2;
+                bSuccess = nOCTimaqWrapper.StartAcquisition(bSuccess);
 
                 int bufferIndex0 = 0;   // this should be set outside of the loop?  bhp  // I put this two line codes out of the while loop_HY
                 int bufferIndex1 = 0;
@@ -1918,6 +1927,9 @@ namespace nOCT
                                 threadData.strAcquireIMAQThreadStatus = "Wa";
 
                                 #if TRUEIMAQ
+
+
+
 
                                 for(int nChunk=0 ; nChunk<UIData.nLLChunksPerImage; nChunk++)
                                 {
@@ -6047,7 +6059,7 @@ namespace nOCT
         
         [SuppressUnmanagedCodeSecurityAttribute()]
         [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\nOCT 20210117\\dll\\nOCTImaq.dll")]
-        public static extern void StartAcquisition();
+        public static extern int StartAcquisition(int bSuccess);
 
         [SuppressUnmanagedCodeSecurityAttribute()]
         [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\nOCT 20210117\\dll\\nOCTImaq.dll")]
