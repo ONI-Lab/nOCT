@@ -1212,8 +1212,16 @@ namespace nOCT
 
             // initialization
             double dLineTriggerRate = UIData.nLLLineRate;
-            int nNumberLines = 2048;
-            int nNumberFrames = 512;
+
+
+            int nNumberLines = UIData.nLLLinesPerChunk * UIData.nLLChunksPerImage;
+            int nNumberFrames = UIData.nLLImagesPerVolume;
+            float fFastGalvoStart = UIData.fLLCenterX;
+            float fFastGalvoStop = UIData.fLLCenterY;
+            float fSlowGalvoStart = UIData.fLLRangeFast;
+            float fSlowGalvoStop = UIData.fLLRangeSlow;
+            float nPolModState1 = (float)UIData.nLLRoundingFast;
+            float nPolModState2 = (float)UIData.nLLRoundingSlow;
 
 #if (TRUEDAQ)
             // counter task
@@ -1281,7 +1289,7 @@ namespace nOCT
             {
                 for (k = 0; k < nNumberLines; k++)
                 {
-                    anaWFM[i, j * nNumberLines + k] = (1.0 * k) / (0.5 * nNumberLines) * 2.0;
+                    anaWFM[i, j * nNumberLines + k] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberLines;
                 }
             }
             // slow galvo
@@ -1290,7 +1298,7 @@ namespace nOCT
             {
                 for (k = 0; k < nNumberLines; k++)
                 {
-                    anaWFM[i, j * nNumberLines + k] = (1.0 * j) / (0.5 * nNumberLines) * 2.0;
+                    anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
                 }
             }
             // pol mod
@@ -1299,8 +1307,8 @@ namespace nOCT
             {
                 for (k = 0; k < nNumberLines; k += 2)
                 {
-                    anaWFM[i, j * nNumberLines + k] = -1.0;
-                    anaWFM[i, j * nNumberLines + k + 1] = 1.0;
+                    anaWFM[i, j * nNumberLines + k] = nPolModState1;
+                    anaWFM[i, j * nNumberLines + k + 1] = nPolModState2;
                 }
             }
             anaWriter.WriteMultiSample(false, anaWFM);
@@ -1345,7 +1353,7 @@ namespace nOCT
                     {
                         for (k = 0; k < nNumberLines; k++)
                         {
-                            anaWFM[i, j * nNumberLines + k] = (1.0 * k) / (0.5 * nNumberLines) * 2.0;
+                            anaWFM[i, j * nNumberLines + k] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberLines;
                         }
                     }
                     // slow galvo
@@ -1354,7 +1362,7 @@ namespace nOCT
                     {
                         for (k = 0; k < nNumberLines; k++)
                         {
-                            anaWFM[i, j * nNumberLines + k] = (1.0 * j) / (0.5 * nNumberLines) * 2.0;
+                            anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
                         }
                     }
                     // pol mod
@@ -1363,8 +1371,8 @@ namespace nOCT
                     {
                         for (k = 0; k < nNumberLines; k += 2)
                         {
-                            anaWFM[i, j * nNumberLines + k] = -1.0;
-                            anaWFM[i, j * nNumberLines + k + 1] = 1.0;
+                            anaWFM[i, j * nNumberLines + k] = nPolModState1;
+                            anaWFM[i, j * nNumberLines + k + 1] = nPolModState2;
                         }
                     }
                     anaWriter.BeginWriteMultiSample(false, anaWFM, null, null);
@@ -1486,6 +1494,7 @@ namespace nOCT
                             threadData.nodeAcquire.Value.nFileNumber = nFileNumber;
                             threadData.nFramePosition = nFramePosition;
                             threadData.nFileNumber = nFileNumber;
+                            threadData.bRecord = UIData.bLLFileRecord;
                             nFileNumber++;
                             
                             nFramePosition++;

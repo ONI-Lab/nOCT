@@ -962,18 +962,18 @@
                         <TextBox Grid.Column="7" Grid.Row="7" Name="txtLLFileCycle" Text="{Binding nLLFileCycle}" Margin="0,1,0,0" />
 
                         <TextBlock Grid.Column="10" Grid.ColumnSpan="2" Grid.Row="1" FontWeight="Bold" TextDecorations="Underline">scan control</TextBlock>
-                        <TextBlock Grid.Column="11" Grid.Row="2">center (x,y) in V</TextBlock>
+                        <TextBlock Grid.Column="11" Grid.Row="2">Fast Galvo (Start, Stop) in V</TextBlock>
                         <TextBox Grid.Column="12" Grid.Row="2" Name="txtLLCenterX" Text="{Binding dLLCenterX}" />
                         <TextBox Grid.Column="14" Grid.Row="2" Name="txtLLCenterY" Text="{Binding dLLCenterY}" />
                         <TextBlock Grid.Column="11" Grid.Row="3">fast axis angle (degrees)</TextBlock>
                         <TextBox Grid.Column="12" Grid.ColumnSpan="3" Grid.Row="3" Name="txtLLFastAngle" Text="{Binding dLLFastAngle}" />
-                        <TextBlock Grid.Column="11" Grid.Row="4">range (fast,slow) in V</TextBlock>
+                        <TextBlock Grid.Column="11" Grid.Row="4">Slow Galvo (Start, Stop) in V</TextBlock>
                         <TextBox Grid.Column="12" Grid.Row="4" Name="txtLLRangeFast" Text="{Binding dLLRangeFast}" />
                         <TextBox Grid.Column="14" Grid.Row="4" Name="txtLLRangeSlow" Text="{Binding dLLRangeSlow}" />
                         <TextBlock Grid.Column="11" Grid.Row="5">dwell (fast, slow)</TextBlock>
                         <TextBox Grid.Column="12" Grid.Row="5" Name="txtLLDwellFast" Text="{Binding nLLDwellFast}" />
                         <TextBox Grid.Column="14" Grid.Row="5" Name="txtLLDwellSlow" Text="{Binding nLLDwellSlow}" />
-                        <TextBlock Grid.Column="11" Grid.Row="6">rounding (fast, slow)</TextBlock>
+                        <TextBlock Grid.Column="11" Grid.Row="6">Pol Mod (State1, State2) in V</TextBlock>
                         <TextBox Grid.Column="12" Grid.Row="6" Name="txtLLRoundingFast" Text="{Binding nLLRoundingFast}" />
                         <TextBox Grid.Column="14" Grid.Row="6" Name="txtLLRoundingSlow" Text="{Binding nLLRoundingSlow}" />
                         <Button Grid.Column="11" Grid.ColumnSpan="4" Grid.Row="7" Name="btnLLGalvoUpdate" Click="btnLLGalvoUpdate_Click">update</Button>
