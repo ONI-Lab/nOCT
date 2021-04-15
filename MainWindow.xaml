@@ -1041,7 +1041,7 @@
                         <TextBlock Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2">5 - save</TextBlock>
                         <TextBox Grid.Row="4" Grid.Column="4" Grid.ColumnSpan="2" Name="txtLRSaveThreadStatus" Text="{Binding strLRSaveThreadStatus}" />
                         <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2">4 - acquire</TextBlock>
-                        <TextBox Grid.Row="5" Grid.Column="4" Grid.ColumnSpan="2" Name="txtLRAcquireThreadStatus" Text="{Binding strLRAcquireThreadStatus}" />
+                        <TextBox Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="4" Name="txtLRAcquireThreadStatus" Text="{Binding strLRAcquireThreadStatus}" />
                         <TextBlock Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2">3 - process</TextBlock>
                         <TextBox Grid.Row="6" Grid.Column="4" Grid.ColumnSpan="2" Name="txtLRProcessThreadStatus" Text="{Binding strLRProcessThreadStatus}" />
                         <TextBlock Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2">2 - stage 1</TextBlock>
