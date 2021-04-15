@@ -1470,7 +1470,7 @@ namespace nOCT
             #endregion
 
             int nFileNumber = UIData.nLLFileNumber;  // initial value = 100001 
-            int nFramePosition = 1;
+            int nFramePosition = 0;
 
             #region main loop
 
@@ -1504,7 +1504,7 @@ namespace nOCT
                             threadData.nodeAcquire.Value.bRecord = threadData.bRecord;
 
                             /* Begin: 20201208 editing by JL */                            
-                            threadData.nodeAcquire.Value.strFilename = UIData.strLLFileDirectory + "//" + UIData.strLLFilePrefix + String.Format("{0}", nFileNumber) + ".dat";
+                            threadData.nodeAcquire.Value.strFilename = UIData.strLLFileDirectory + "\\" + UIData.strLLFilePrefix + String.Format("{0}", nFileNumber) + ".dat";
                             threadData.nodeAcquire.Value.nFramePosition = nFramePosition;
                             threadData.nodeAcquire.Value.nFileNumber = nFileNumber;
                             threadData.nFramePosition = nFramePosition;
@@ -2191,7 +2191,7 @@ namespace nOCT
                                 // general header info
                                 fs.Seek(0, SeekOrigin.Begin);
                                 strTest = nodeSave.Value.strFilename;                   binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                strTest = "strDateTime=" + nodeSave.Value.strDateTime + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                strTest = "strDateTime='" + nodeSave.Value.strDateTime + "';"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
                                 /* End: 20210414 editing by JL */
 
 
@@ -2199,7 +2199,7 @@ namespace nOCT
                                 {
                                     case 0: // SD-OCT
                                         /* Begin: 20210414 editing by JL */
-                                        strTest = "strSysType='SD-OCT'";                binWriter.Write(strTest.Length);    binWriter.Write(strTest);
+                                        strTest = "strSysType='SD-OCT';";                binWriter.Write(strTest.Length);    binWriter.Write(strTest);
                                         /* End: 20210414 editing by JL */
                                         strTest = "nFrameNumber=" + nodeSave.Value.nFramePosition + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
                                         strTest = "nNumberDataArrays=" + 2 + ";";       binWriter.Write(strTest.Length);    binWriter.Write(strTest);
@@ -2238,13 +2238,13 @@ namespace nOCT
                                         break;
                                     case 1: // PS-SD-OCT
                                         /* Begin: 20210414 editing by JL */
-                                        strTest = "strSysType='PS-SD-OCT'"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "strSysType='PS-SD-OCT';"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
                                         /* End: 20210414 editing by JL */
                                         strTest = "nFrameNumber=" + nodeSave.Value.nFramePosition + ";";    binWriter.Write(strTest.Length);    binWriter.Write(strTest);
                                         strTest = "nNumberDataArrays=" + 2 + ";";       binWriter.Write(strTest.Length);    binWriter.Write(strTest);
 
                                         // header array 1: IMAQ data (parallel and perpendicular)
-                                        strTest = "strVar='pdIMAQx2';";                 binWriter.Write(strTest.Length);    binWriter.Write(strTest);
+                                        strTest = "strVar='pdIMAQ';";                   binWriter.Write(strTest.Length);    binWriter.Write(strTest);
                                         strTest = "nOffset=" + nOffset1 + ";";          binWriter.Write(strTest.Length);    binWriter.Write(strTest);
                                         strTest = "nNumberLines=" + nNumberLines + ";"; binWriter.Write(strTest.Length);    binWriter.Write(strTest);
                                         strTest = "nLineLength=" + nLineLength + ";";   binWriter.Write(strTest.Length);    binWriter.Write(strTest);
