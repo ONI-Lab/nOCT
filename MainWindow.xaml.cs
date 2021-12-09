@@ -7,8 +7,8 @@
 //#define TRUEDAQ
 #undef TRUEDAQ
 
-#define TRUEIMAQ
-//#undef TRUEIMAQ
+//#define TRUEIMAQ
+#undef TRUEIMAQ
 
 //#define TRUECUDA
 #undef TRUECUDA
@@ -4327,6 +4327,8 @@ namespace nOCT
 #region initializing
             threadData.strProcess2ThreadStatus = "Initializing...";
 
+            #region variables for thread operation
+
             // initialization
             bool bTroublemaker = false;
 
@@ -4342,6 +4344,49 @@ namespace nOCT
             WaitHandle[] pweLoop = new WaitHandle[2];
             pweLoop[0] = threadData.mreProcess2Kill;
             pweLoop[1] = threadData.mreProcess2Action;
+
+            #endregion variables for thread operation
+
+            #region variables for main loop
+
+            switch (threadData.nProcess2Type)
+            {
+                case 0:
+                    threadData.strProcess2ThreadStatus = "...none...";
+                    break;
+                case 1:
+                    threadData.strProcess2ThreadStatus = "...intensity...";
+                    break;
+                case 2:
+                    threadData.strProcess2ThreadStatus = "...attenuation...";
+                    break;
+                case 3:
+                    threadData.strProcess2ThreadStatus = "...phase...";
+                    break;
+                case 4:
+                    threadData.strProcess2ThreadStatus = "...polarization...";
+                    break;
+                case 5:
+                    threadData.strProcess2ThreadStatus = "...angiography...";
+                    break;
+                case 6:
+                    threadData.strProcess2ThreadStatus = "...elastography...";
+                    break;
+                case 7:
+                    threadData.strProcess2ThreadStatus = "...spectroscopy...";
+                    break;
+                case 8:
+                    threadData.strProcess2ThreadStatus = "...spectral binning...";
+
+                    // call to ipp thread for spectral binning
+                    Thread.Sleep(500);
+
+                    break;
+            }   // switch (nProcess2Type
+
+
+            #endregion variables for main loop
+
 
             // initialization complete
             threadData.mreProcess2Ready.Set();
