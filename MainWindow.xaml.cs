@@ -1087,6 +1087,16 @@ namespace nOCT
             GC.Collect();
         }   // private void btnLRGCCollect_Click
 
+
+        /* Begin: 20211208 editing by JL */
+        private void btnURIntensityApply_Click(object sender, RoutedEventArgs e)
+        {
+            // GC.Collect();
+        }   // private void btnURIntensityApply_Click
+
+
+        /* End: 20211208 editing by JL */
+
         void MainThread()
         {
 #region initializing
@@ -1927,26 +1937,49 @@ namespace nOCT
                                 switch (threadData.nodeAcquire.Value.nNodeID % 5)
                                 {
                                     case 0:
-//                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH1.bin");
-                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\calibration\\Parallel_20201223_PSOCT_Calibration_102561.bin");
+                                        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH1.bin");
+                                        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT USC OCE\\TestData\\TestOCE_Phantom_test_37_108944.bin");
                                         break;
                                     case 1:
-//                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH2.bin");
-                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\calibration\\Parallel_20201223_PSOCT_Calibration_102562.bin");
+                                        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH2.bin");
+                                        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT USC OCE\\TestData\\TestOCE_Phantom_test_37_108945.bin");
                                         break;
                                     case 2:
-//                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH3.bin");
-                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\calibration\\Parallel_20201223_PSOCT_Calibration_102563.bin");
+                                        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH3.bin");
+                                        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT USC OCE\\TestData\\TestOCE_Phantom_test_37_108946.bin");
                                         break;
                                     case 3:
-//                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH4.bin");
-                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\calibration\\Parallel_20201223_PSOCT_Calibration_102564.bin");
+                                        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH4.bin");
+                                        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT USC OCE\\TestData\\TestOCE_Phantom_test_37_108947.bin");
                                         break;
                                     case 4:
-//                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH5.bin");
-                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\calibration\\Parallel_20201223_PSOCT_Calibration_102565.bin");
+                                        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH5.bin");
+                                        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT USC OCE\\TestData\\TestOCE_Phantom_test_37_108948.bin");
                                         break;
                                 }
+                                //switch (threadData.nodeAcquire.Value.nNodeID % 5)
+                                //{
+                                //    case 0:
+                                //        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH1.bin");
+                                //        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT USC OCE\\TestData\\TestOCE_Cartilage_test_38_104666.bin");
+                                //        break;
+                                //    case 1:
+                                //        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH2.bin");
+                                //        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT USC OCE\\TestData\\TestOCE_Cartilage_test_38_104667.bin");
+                                //        break;
+                                //    case 2:
+                                //        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH3.bin");
+                                //        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT USC OCE\\TestData\\TestOCE_Cartilage_test_38_104668.bin");
+                                //        break;
+                                //    case 3:
+                                //        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH4.bin");
+                                //        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT USC OCE\\TestData\\TestOCE_Cartilage_test_38_104669.bin");
+                                //        break;
+                                //    case 4:
+                                //        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH5.bin");
+                                //        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT USC OCE\\TestData\\TestOCE_Cartilage_test_38_104670.bin");
+                                //        break;
+                                //}
                                 if (UIData.nLLChunksPerImage > 0)
                                 {
                                     for (int nChunk = 0; nChunk < UIData.nLLChunksPerImage; nChunk++)
@@ -3003,6 +3036,7 @@ namespace nOCT
                 }   // for (nPoint
                 #endregion
             }   // for (nLine
+
         }
 
 
@@ -4138,6 +4172,12 @@ namespace nOCT
                                     break;
                                 case 6:  // elastography
                                     // copy results to pnProcess2 data structures
+
+                                    /* Begin: 20211206 editing by JL */
+                                    // Buffer.BlockCopy(pfR, 0, threadData.pfProcess2ComplexRealParallel, )
+
+                                    /* End: 20211206 editing by JL */
+
                                     break;
                                 case 7:  // spectroscopy
                                     // copy results to pnProcess2 data structures
