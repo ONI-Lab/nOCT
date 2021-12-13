@@ -510,7 +510,7 @@ namespace nOCT
                     #endregion
 
                     #region set main range
-                    axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nRawAlineLength));
+                    axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nProcessedAlineLength));
                     axisULMainHorizontal.Range = new Range<float>(0f, (float)(threadData.nRawNumberAlines));
                     ColorScaleMarker[] csMarker = new ColorScaleMarker[2];
                     csMarker[0].Color = Colors.White;
@@ -709,21 +709,23 @@ namespace nOCT
 
             switch (UIData.nLLSystemType)
             {
-                case 0: // SD-OCT
+                case 0: // SD-OCT                    
                     threadData.nRawNumberAlines = UIData.nLLChunksPerImage * UIData.nLLLinesPerChunk;
                     threadData.nRawAlineLength = UIData.nLLIMAQLineLength;
+                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines;
+                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;                    
                     threadData.pfProcess1DAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pfProcess1IMAQParallel = new float[threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess2ADAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pfProcess2AIMAQParallel = new float[threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess2ComplexRealParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
-                    threadData.pfProcess2ComplexImagParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
-                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines;
-                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
+                    threadData.pfProcess2ComplexImagParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];                                        
                     break;
                 case 1: // PS SD-OCT
                     threadData.nRawNumberAlines = UIData.nLLChunksPerImage * UIData.nLLLinesPerChunk;  // total number of even and odd for each camera (parallel and perpendicular)
                     threadData.nRawAlineLength = UIData.nLLIMAQLineLength;
+                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines / 2;  // by combining even and odds
+                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
                     threadData.pfProcess1DAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pfProcess1IMAQParallel = new float[threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess1IMAQPerpendicular = new float[threadData.nRawNumberAlines * threadData.nRawAlineLength];
@@ -734,32 +736,33 @@ namespace nOCT
                     threadData.pfProcess2ComplexImagParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
                     threadData.pfProcess2ComplexRealPerpendicular = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
                     threadData.pfProcess2ComplexImagPerpendicular = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
-                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines / 2;  // by combining even and odds
-                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
+                    
                     break;
-                case 2: // line field
+                case 2: // line field                    
                     threadData.nRawNumberAlines = UIData.nLLIMAQLineLength;
                     threadData.nRawAlineLength = UIData.nLLAlazarLineLength;  // using the alazar length even though acquisition will be on DAQ
+                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines;
+                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
                     threadData.pfProcess1DAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pfProcess1IMAQParallel = new float[threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess2ADAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pfProcess2AIMAQParallel = new float[threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess2ComplexRealParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
                     threadData.pfProcess2ComplexImagParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
-                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines;
-                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
+                    
                     break;
-                case 3: // OFDI
+                case 3: // OFDI                    
                     threadData.nRawNumberAlines = UIData.nLLChunksPerImage * UIData.nLLLinesPerChunk;  // will be two channels, each with this number of lines
                     threadData.nRawAlineLength = UIData.nLLAlazarLineLength;
+                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines;
+                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
                     threadData.pnProcess1Alazar = new UInt16[2 * threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess1DAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pnProcess2AAlazar = new UInt16[2 * threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess2ADAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pfProcess2ComplexRealParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
                     threadData.pfProcess2ComplexImagParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
-                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines;
-                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
+                    
                     break;
                 case 4: // PS OFDI
                     break;
@@ -845,9 +848,12 @@ namespace nOCT
             axisULTopHorizontal.Range = new Range<int>(0, threadData.nRawNumberAlines - 1);
             axisULTopVertical.Range = new Range<float>(fMin, fMax);
 
+            /* Begin: 20211211 editing by JL: halve the vertical display */
             UIData.pfULImage = new float[threadData.nRawNumberAlines, threadData.nRawAlineLength];
+            //UIData.pfULImage = new float[threadData.nRawNumberAlines, threadData.nProcessedAlineLength];
             graphULMain.DataSource = UIData.pfULImage;
             axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nRawAlineLength));
+            /* End: 20211211 editing by JL */
             axisULMainHorizontal.Range = new Range<float>(0f, (float)(threadData.nRawNumberAlines));
             ColorScaleMarker[] csMarker = new ColorScaleMarker[2];
             csMarker[0].Color = Colors.White;
@@ -1222,8 +1228,8 @@ namespace nOCT
 
             // initialization
             double dLineTriggerRate = UIData.nLLLineRate;
-            int nNumberLines = 2048;
-            int nNumberFrames = 512;
+            //int nNumberLines = 2048;
+            //int nNumberFrames = 512;
 
 #if (TRUEDAQ)
             // counter task
@@ -1934,6 +1940,29 @@ namespace nOCT
                                 threadData.strAcquireIMAQThreadStatus = "Wd";
                                 // read from file
                                 var byteBuffer = new byte[threadData.nRawNumberAlines * threadData.nRawAlineLength * sizeof(Int16)];
+                                //switch (threadData.nodeAcquire.Value.nNodeID % 5)
+                                //{
+                                //    case 0:
+                                //        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH1.bin");
+                                //        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT 20210414 revised threads\\SDdata\\2019_03_04_Mirror_1_109483.bin");
+                                //        break;
+                                //    case 1:
+                                //        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH2.bin");
+                                //        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT 20210414 revised threads\\SDdata\\2019_03_04_Mirror_2_109648.bin");
+                                //        break;
+                                //    case 2:
+                                //        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH3.bin");
+                                //        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT 20210414 revised threads\\SDdata\\2019_03_04_Mirror_3_109755.bin");
+                                //        break;
+                                //    case 3:
+                                //        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH4.bin");
+                                //        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT 20210414 revised threads\\SDdata\\2019_03_04_Mirror_4_109867.bin");
+                                //        break;
+                                //    case 4:
+                                //        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH5.bin");
+                                //        byteBuffer = File.ReadAllBytes("D:\\Codes\\nOCT 20210414 revised threads\\SDdata\\2019_03_04_Mirror_5_109988.bin");
+                                //        break;
+                                //}
                                 switch (threadData.nodeAcquire.Value.nNodeID % 5)
                                 {
                                     case 0:
@@ -4149,7 +4178,7 @@ namespace nOCT
 
                             #region prepare secondary processing
 
-                            Thread.Sleep(10);
+                            // Thread.Sleep(10);
 
                             switch (threadData.nProcess2Type)
                             {
@@ -4174,7 +4203,10 @@ namespace nOCT
                                     // copy results to pnProcess2 data structures
 
                                     /* Begin: 20211206 editing by JL */
-                                    // Buffer.BlockCopy(pfR, 0, threadData.pfProcess2ComplexRealParallel, )
+
+                                    // new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength]
+                                    // Buffer.BlockCopy(pfR, 0 * nNumberSets * nNumberLinesPerSet * nLineLength * sizeof(float), threadData.pfProcess2ComplexRealParallel, 0 * nNumberSets * nNumberLinesPerSet * nLineLength * sizeof(float), nNumberSets * nNumberLinesPerSet * nLineLength * sizeof(float));
+                                    // Buffer.BlockCopy(pfI, 0 * nNumberSets * nNumberLinesPerSet * nLineLength * sizeof(float), threadData.pfProcess2ComplexImagParallel, 0 * nNumberSets * nNumberLinesPerSet * nLineLength * sizeof(float), nNumberSets * nNumberLinesPerSet * nLineLength * sizeof(float));
 
                                     /* End: 20211206 editing by JL */
 
@@ -4293,15 +4325,20 @@ namespace nOCT
                                             pfLine[nPoint] += pfR[nLineOffset + nPoint] * pfR[nLineOffset + nPoint] + pfI[nLineOffset + nPoint] * pfI[nLineOffset + nPoint];
                                     }   // if (pbCalibrationLine
                                 }   // for (nCalibrationLine
-                                for (nPoint = 0; nPoint < nLineLength >> 1; nPoint++)
-                                {
+
+                                /* Begin: 20211211 editing by JL: halve the vertical display */
+                                for (nPoint = 0; nPoint < nLineLength >> 1; nPoint++)                                
+                                    {
                                     for (nDoubler = 0; nDoubler < nDoubleLines; nDoubler++)
                                     {
-                                        UIData.pfULImage[nDoubleLines * nLine + nDoubler, 2 * nPoint + 0] = (float)(10.0 * Math.Log10(pfLine[nPoint]));
-                                        UIData.pfULImage[nDoubleLines * nLine + nDoubler, 2 * nPoint + 1] = UIData.pfULImage[nLine, 2 * nPoint + 0];
+                                        //UIData.pfULImage[nDoubleLines * nLine + nDoubler, 2 * nPoint + 0] = (float)(10.0 * Math.Log10(pfLine[nPoint]));
+                                        //UIData.pfULImage[nDoubleLines * nLine + nDoubler, 2 * nPoint + 1] = UIData.pfULImage[nLine, 2 * nPoint + 0];
+                                        UIData.pfULImage[nDoubleLines * nLine + nDoubler, nPoint + 0] = (float)(10.0 * Math.Log10(pfLine[nPoint]));
                                     }   // for (nDoubler
                                 }
+                                int b = 0; 
                             }   // for (nLine
+                            /* End: 20211211 editing by JL */
 
                             #endregion main
 
@@ -4309,8 +4346,10 @@ namespace nOCT
                             nAline = UIData.nULLeft;
                             if (nAline < 0) nAline = 0;
                             if (nAline >= threadData.nRawNumberAlines) nAline = threadData.nRawNumberAlines - 1;
-                            for (nPoint = 0; nPoint < threadData.nRawAlineLength; nPoint++)
+                            /* Begin: 20211211 editing by JL: halve the vertical display */
+                            for (nPoint = 0; nPoint < threadData.nProcessedAlineLength; nPoint++)
                                 UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
+                            /* End: 20211211 editing by JL */
                             #endregion
 
                             #region top
@@ -4389,6 +4428,7 @@ namespace nOCT
 
             #region variables for main loop
 
+
             switch (threadData.nProcess2Type)
             {
                 case 0:
@@ -4411,6 +4451,7 @@ namespace nOCT
                     break;
                 case 6:
                     threadData.strProcess2ThreadStatus = "...elastography...";
+                    int a = 0; 
                     break;
                 case 7:
                     threadData.strProcess2ThreadStatus = "...spectroscopy...";
@@ -4471,6 +4512,7 @@ namespace nOCT
                                 break;
                             case 6:
                                 threadData.strProcess2ThreadStatus = "...elastography...";
+                                int b = 0; 
                                 break;
                             case 7:
                                 threadData.strProcess2ThreadStatus = "...spectroscopy...";
@@ -4508,6 +4550,7 @@ namespace nOCT
                                 break;
                             case 6:
                                 threadData.strProcess2ThreadStatus = "...elastography...";
+                                int c = 0; 
                                 break;
                             case 7:
                                 threadData.strProcess2ThreadStatus = "...spectroscopy...";
