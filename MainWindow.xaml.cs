@@ -537,9 +537,9 @@ namespace nOCT
 
                 #region UR
 
-//                graphURLeft.Refresh();
-//               graphURTop.Refresh();
-//                graphURMain.Refresh();
+                graphURLeft.Refresh();
+                graphURTop.Refresh();
+                graphURMain.Refresh();
 
                 #endregion  // UR
 
@@ -3372,6 +3372,11 @@ namespace nOCT
 
         }
 
+        void processElastography(float pfdB, ref float[] pfdBDiff)
+        {
+
+        }
+
 
         void Process1Thread()
         {
@@ -4202,13 +4207,28 @@ namespace nOCT
                                 case 6:  // elastography
                                     // copy results to pnProcess2 data structures
 
-                                    /* Begin: 20211206 editing by JL */
+                                    /* Begin: 20211208 editing by JL */
+                                    float[] pfHalfR = new float[nNumberSets * nNumberLinesPerSet * nLineLength >> 1];
+                                    float[] pfHalfI = new float[nNumberSets * nNumberLinesPerSet * nLineLength >> 1];
 
+                                    int nLine, nLineOffset, nHalfLineOffset;
+                                    int nProcessedAlineLength = threadData.nProcessedAlineLength;
+                                    for (nLine = 0; nLine < nNumberLinesPerSet * nNumberSets; nLine++)
+                                    {
+                                        nLineOffset = nLine * nLineLength;
+                                        nHalfLineOffset = nLine * nProcessedAlineLength; 
+                                        for (nPoint = 0; nPoint < nProcessedAlineLength; nPoint++)
+                                        {
+                                            pfHalfR[nHalfLineOffset + nPoint] = pfR[nLineOffset + nPoint];
+                                            pfHalfI[nHalfLineOffset + nPoint] = pfI[nLineOffset + nPoint];
+                                        }
+                                    }
                                     // new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength]
-                                    // Buffer.BlockCopy(pfR, 0 * nNumberSets * nNumberLinesPerSet * nLineLength * sizeof(float), threadData.pfProcess2ComplexRealParallel, 0 * nNumberSets * nNumberLinesPerSet * nLineLength * sizeof(float), nNumberSets * nNumberLinesPerSet * nLineLength * sizeof(float));
-                                    // Buffer.BlockCopy(pfI, 0 * nNumberSets * nNumberLinesPerSet * nLineLength * sizeof(float), threadData.pfProcess2ComplexImagParallel, 0 * nNumberSets * nNumberLinesPerSet * nLineLength * sizeof(float), nNumberSets * nNumberLinesPerSet * nLineLength * sizeof(float));
-
-                                    /* End: 20211206 editing by JL */
+                                    Buffer.BlockCopy(pfHalfR, 0, threadData.pfProcess2ComplexRealParallel, 0, nNumberSets * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                    Buffer.BlockCopy(pfHalfI, 0, threadData.pfProcess2ComplexImagParallel, 0, nNumberSets * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                    Array.Clear(pfHalfR, 0, pfHalfR.Length);
+                                    Array.Clear(pfHalfI, 0, pfHalfI.Length);
+                                    /* End: 20211208 editing by JL */
 
                                     break;
                                 case 7:  // spectroscopy
@@ -4336,9 +4356,8 @@ namespace nOCT
                                         UIData.pfULImage[nDoubleLines * nLine + nDoubler, nPoint + 0] = (float)(10.0 * Math.Log10(pfLine[nPoint]));
                                     }   // for (nDoubler
                                 }
-                                int b = 0; 
+                                /* End: 20211211 editing by JL */
                             }   // for (nLine
-                            /* End: 20211211 editing by JL */
 
                             #endregion main
 
@@ -4413,7 +4432,17 @@ namespace nOCT
 
             int nProcess2Type;
 
+            #region define general use variables
             int nAline, nPoint;
+            int nProcessedNumberLines = threadData.nProcessedNumberAlines;
+            int nProcessedLineLength = threadData.nProcessedAlineLength;
+            float[] pfLine = new float[nProcessedLineLength];
+            #endregion define general use variables
+
+            #region necessary for calculations
+            float[] pfProcessedR = new float[nProcessedLineLength * nProcessedNumberLines];
+            float[] pfProcessedI = new float[nProcessedLineLength * nProcessedNumberLines];
+            #endregion necessary for calculations
 
             // set up wait handles to start
             WaitHandle[] pweStart = new WaitHandle[2];
@@ -4451,7 +4480,6 @@ namespace nOCT
                     break;
                 case 6:
                     threadData.strProcess2ThreadStatus = "...elastography...";
-                    int a = 0; 
                     break;
                 case 7:
                     threadData.strProcess2ThreadStatus = "...spectroscopy...";
@@ -4479,7 +4507,6 @@ namespace nOCT
             if (WaitHandle.WaitAny(pweStart) == 1)
             {
                 threadData.strProcess2ThreadStatus = "GO!";
-
                 while (WaitHandle.WaitAny(pweLoop) != 0)
                 {
                     threadData.mreProcess2Action.Reset();
@@ -4512,7 +4539,14 @@ namespace nOCT
                                 break;
                             case 6:
                                 threadData.strProcess2ThreadStatus = "...elastography...";
-                                int b = 0; 
+
+                                /* Begin: 20211211 editing by JL */                                
+
+                                Buffer.BlockCopy(threadData.pfProcess2ComplexRealParallel, 0, pfProcessedR, 0, nProcessedLineLength * nProcessedNumberLines * sizeof(float));
+                                Buffer.BlockCopy(threadData.pfProcess2ComplexImagParallel, 0, pfProcessedI, 0, nProcessedLineLength * nProcessedNumberLines * sizeof(float));
+                                /* End: 20211211 editing by JL */
+
+                                // Thread.Sleep(500); 
                                 break;
                             case 7:
                                 threadData.strProcess2ThreadStatus = "...spectroscopy...";
@@ -4550,7 +4584,23 @@ namespace nOCT
                                 break;
                             case 6:
                                 threadData.strProcess2ThreadStatus = "...elastography...";
-                                int c = 0; 
+                                /* Begin: 20211211 editing by JL */
+
+                                // actual elastography processing
+                                //for (nPoint = 0; nPoint < nLineLength; nPoint++)
+                                //    pfLine[nPoint] += pfR[nLineOffset + nPoint] * pfR[nLineOffset + nPoint] + pfI[nLineOffset + nPoint] * pfI[nLineOffset + nPoint];
+                                for (nAline = 0; nAline < nProcessedNumberLines; nAline++)
+                                {
+                                    int nLineOffset = nAline * nProcessedLineLength; 
+                                    for (nPoint = 0; nPoint < nProcessedLineLength; nPoint++)
+                                    {
+                                        pfLine[nPoint] = pfProcessedR[nLineOffset + nPoint] * pfProcessedR[nLineOffset + nPoint] + pfProcessedI[nLineOffset + nPoint] * pfProcessedI[nLineOffset + nPoint];
+                                        UIData.pfURImage[nAline, nPoint] = (float)(10.0 * Math.Log10(pfLine[nPoint])); 
+                                    }
+                                }
+
+                                /* End: 20211211 editing by JL */
+
                                 break;
                             case 7:
                                 threadData.strProcess2ThreadStatus = "...spectroscopy...";

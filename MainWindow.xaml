@@ -841,15 +841,15 @@
                     </ni:Graph.Axes>
                 </ni:Graph>
             </Grid>
-            <ni:IntensityGraph Grid.Row="2" Grid.Column="2" Name="graphURMain" RenderMode="Raster" MouseDoubleClick="graphURMain_MouseDoubleClick" >
+            <ni:IntensityGraph Grid.Row="2" Grid.Column="2" Name="graphURMain" RenderMode="Raster" >
                 <!-- Inverts Y-axis-->
                 <ni:IntensityGraph.VerticalAxis>
                     <ni:AxisSingle IsInverted="True" Adjuster="FitExactly"/>
                 </ni:IntensityGraph.VerticalAxis >
                 <ni:IntensityGraph.ColorScale>
-                    <ni:ColorScale Location ="Far" LowColor="White" HighColor="Black">
-                        <ni:ColorScaleMarker Color="White" Value="0"/>
-                        <ni:ColorScaleMarker Color="Black" Value="16384"/>
+                    <ni:ColorScale Location ="Far" LowColor="Blue" HighColor="Red">
+                        <ni:ColorScaleMarker Color="Blue" Value="0"/>
+                        <ni:ColorScaleMarker Color="Red" Value="16384"/>
                     </ni:ColorScale>
                 </ni:IntensityGraph.ColorScale>
             </ni:IntensityGraph>
