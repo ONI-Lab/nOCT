@@ -3372,11 +3372,174 @@ namespace nOCT
 
         }
 
-        void processElastography(float pfdB, ref float[] pfdBDiff)
+        /* Begin: 20211212 editing by JL */
+        void processElastography(float[,] pfdB, ref float[,] pfdBDiff, ref float[,] pfdBEven, ref float[,] pfdBOdd)
         {
+            int nPoint, nLine, nEvenLine, nOddLine;
+            int nProcessedNumberLines = pfdB.GetLength(0); // threadData.nProcessedNumberAlines;
+            int nProcessedLineLength = pfdB.GetLength(1);  // threadData.nProcessedAlineLength;
+            float[,] pfdBEvenSmooth = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            float[,] pfdBOddSmooth = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            pfdBDiff = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            pfdBEven = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            pfdBOdd = new float[nProcessedNumberLines >> 1, nProcessedLineLength];            
+
+            // construct odd and even lines images
+            for (nLine = 0; nLine < nProcessedNumberLines >> 1; nLine++)
+            {
+                nEvenLine = 2 * nLine;
+                nOddLine = 2 * nLine + 1; 
+                for (nPoint = 0; nPoint < nProcessedLineLength; nPoint++)
+                {
+                    pfdBEven[nLine, nPoint] = pfdB[nEvenLine, nPoint];
+                    pfdBOdd[nLine, nPoint] = pfdB[nOddLine, nPoint];
+                }
+            }
+
+            // smooth the odd and even images 
+            int[] nKernelSize = new int[] { 9, 9 };
+            smoothImageWithBoxFilter(pfdBEven, nKernelSize, ref pfdBEven);
+            smoothImageWithBoxFilter(pfdBOdd, nKernelSize, ref pfdBOdd);
+
+            // calculate dB difference 
+            for (nLine = 0; nLine < nProcessedNumberLines >> 1; nLine++)
+            {
+                for (nPoint = 0; nPoint < nProcessedLineLength; nPoint++)
+                    pfdBDiff[nLine, nPoint] = Math.Abs(pfdBEven[nLine, nPoint] - pfdBOdd[nLine, nPoint]); 
+            }
+
+            
 
         }
 
+        void smoothImageWithBoxFilter(float[,] pfImage, int[] nKernelSize, ref float[,] pfSmoothImage)
+        {
+            int nKernelSizeX = nKernelSize[0];
+            int nKernelSizeY = nKernelSize[1];
+            int nX, nY, nKernelX, nKernelY, nPoint;
+            int nImgWidth = pfImage.GetLength(0); 
+            int nImgHeight = pfImage.GetLength(1);
+            float fPixel; 
+
+            float fAvgFactorX = (float)(1.0 / (float)nKernelSizeX);
+            float fAvgFactorY = (float)(1.0 / (float)nKernelSizeY);
+
+            float[,] pfSmoothTemp = new float[nImgWidth, nImgHeight];
+            pfSmoothImage = new float[nImgWidth, nImgHeight];
+
+            if (nKernelSizeX > 2)
+            {
+                // horizontal (X) motion blur
+                for (nY = 0; nY < nImgHeight; nY++)
+                {
+                    for (nX = 0; nX < nImgWidth; nX++)
+                    {
+                        float fSum = 0.0f;
+                        if (nX == 0) // the first pixel
+                        {
+                            for (nKernelX = (int)(-nKernelSizeX / 2); nKernelX < (int)(nKernelSizeX / 2 + 1); nKernelX++)
+                            {
+                                nPoint = nX + nKernelX;
+                                if (nPoint < 0) // if the kernel includes points beyond the left edge of image (replicate the edge)
+                                    fPixel = pfImage[0, nY];
+                                else
+                                    fPixel = pfImage[nPoint, nY];
+
+                                fSum += fPixel;
+                            } // for (nKernelX = (int)(-nKernelSizeX / 2); nKernelX < (int)(nKernelSizeX / 2 + 1); nKernelX++)
+                            pfSmoothTemp[nX, nY] = fSum * fAvgFactorX;
+
+                        } // if (nX == 0) // the first pixel
+                        else
+                        {
+                            fSum = pfSmoothTemp[nX - 1, nY] / fAvgFactorX;
+                            // left-most point in the kernel
+                            nPoint = nX + (int)(-nKernelSizeX / 2);
+                            if (nPoint < 0) // if the kernel includes points beyond the left edge of image (replicate the edge)
+                                fPixel = pfImage[0, nY];
+                            else
+                                fPixel = pfImage[nPoint, nY];
+
+                            fSum -= fPixel;
+
+                            // right-most point in the kernel
+                            nPoint = nX + (int)(nKernelSizeX / 2);
+                            if (nPoint > nImgWidth - 1) // if the kernel includes points beyond the right edge of image (replicate the edge)
+                                fPixel = pfImage[nImgWidth - 1, nY];
+                            else
+                                fPixel = pfImage[nPoint, nY];
+
+                            fSum += fPixel;
+
+                            pfSmoothTemp[nX, nY] = fSum * fAvgFactorX;
+                        } // if (nX == 0) // the first pixel
+
+                    } // for (nX = 0; nX < nImgWidth; nX++)
+                } // for (nY = 0; nY < nImgHeight; nY++)
+            } // if (nKernelSizeX > 2)
+            else
+            {
+                Buffer.BlockCopy(pfImage, 0, pfSmoothTemp, 0, nImgWidth * nImgHeight * sizeof(float));
+            } // if (nKernelSizeX > 2)
+
+
+            if (nKernelSizeY > 2)
+            {
+                // vertical (Y) motion blur
+                for (nX = 0; nX < nImgWidth; nX++)
+                {
+                    for (nY = 0; nY < nImgHeight; nY++)
+                    {
+                        float fSum = 0.0f;
+                        if (nY == 0) // the first pixel
+                        {
+                            for (nKernelY = (int)(-nKernelSizeY / 2); nKernelY < (int)(nKernelSizeY / 2 + 1); nKernelY++)
+                            {
+                                nPoint = nY + nKernelY;
+                                if (nPoint < 0) // if the kernel includes points beyond the top edge of image (replicate the edge)
+                                    fPixel = pfSmoothTemp[nX, 0];
+                                else
+                                    fPixel = pfSmoothTemp[nX, nPoint];
+
+                                fSum += fPixel;
+                            } // for (nKernelY = (int)(-nKernelSizeY / 2); nKernelY < (int)(nKernelSizeY / 2 + 1); nKernelY++)
+                            pfSmoothImage[nX, nY] = fSum * fAvgFactorY;
+
+                        } // if (nY == 0) // the first pixel
+                        else
+                        {
+                            fSum = pfSmoothImage[nX, nY - 1] / fAvgFactorY;
+                            // up-most point in the kernel
+                            nPoint = nY + (int)(-nKernelSizeY / 2);
+                            if (nPoint < 0) // if the kernel includes points beyond the up edge of image (replicate the edge)
+                                fPixel = pfSmoothTemp[nX, 0];
+                            else
+                                fPixel = pfSmoothTemp[nX, nPoint];
+
+                            fSum -= fPixel;
+
+                            // bottom-most point in the kernel
+                            nPoint = nY + (int)(nKernelSizeY / 2);
+                            if (nPoint > nImgHeight - 1) // if the kernel includes points beyond the bottom edge of image (replicate the edge)
+                                fPixel = pfSmoothTemp[nX, nImgHeight - 1];
+                            else
+                                fPixel = pfSmoothTemp[nX, nPoint];
+
+                            fSum += fPixel;
+
+                            pfSmoothImage[nX, nY] = fSum * fAvgFactorY;
+
+                        } // if (nY == 0) // the first pixel
+                    } // for (nY = 0; nY < nImgHeight; nY++)
+                } // for (nX = 0; nX < nImgWidth; nX++)
+            } // if (nKernelSizeY > 2)
+            else
+            {
+                Buffer.BlockCopy(pfSmoothTemp, 0, pfSmoothImage, 0, nImgWidth * nImgHeight * sizeof(float));
+            } // if (nKernelSizeY > 2)
+
+        }
+        /* End: 20211212 editing by JL */
 
         void Process1Thread()
         {
@@ -4457,6 +4620,11 @@ namespace nOCT
 
             #region variables for main loop
 
+            // elastography
+            float[,] pfdB = new float[nProcessedNumberLines, nProcessedLineLength];
+            float[,] pfdBDiff = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            float[,] pfdBEven = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            float[,] pfdBOdd = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
 
             switch (threadData.nProcess2Type)
             {
@@ -4540,8 +4708,8 @@ namespace nOCT
                             case 6:
                                 threadData.strProcess2ThreadStatus = "...elastography...";
 
-                                /* Begin: 20211211 editing by JL */                                
-
+                                /* Begin: 20211211 editing by JL */
+                                // Array.Clear(UIData.pfURImage, 0, UIData.pfURImage.Length); 
                                 Buffer.BlockCopy(threadData.pfProcess2ComplexRealParallel, 0, pfProcessedR, 0, nProcessedLineLength * nProcessedNumberLines * sizeof(float));
                                 Buffer.BlockCopy(threadData.pfProcess2ComplexImagParallel, 0, pfProcessedI, 0, nProcessedLineLength * nProcessedNumberLines * sizeof(float));
                                 /* End: 20211211 editing by JL */
@@ -4587,17 +4755,20 @@ namespace nOCT
                                 /* Begin: 20211211 editing by JL */
 
                                 // actual elastography processing
-                                //for (nPoint = 0; nPoint < nLineLength; nPoint++)
-                                //    pfLine[nPoint] += pfR[nLineOffset + nPoint] * pfR[nLineOffset + nPoint] + pfI[nLineOffset + nPoint] * pfI[nLineOffset + nPoint];
                                 for (nAline = 0; nAline < nProcessedNumberLines; nAline++)
                                 {
                                     int nLineOffset = nAline * nProcessedLineLength; 
                                     for (nPoint = 0; nPoint < nProcessedLineLength; nPoint++)
                                     {
                                         pfLine[nPoint] = pfProcessedR[nLineOffset + nPoint] * pfProcessedR[nLineOffset + nPoint] + pfProcessedI[nLineOffset + nPoint] * pfProcessedI[nLineOffset + nPoint];
-                                        UIData.pfURImage[nAline, nPoint] = (float)(10.0 * Math.Log10(pfLine[nPoint])); 
+                                        // UIData.pfURImage[nAline, nPoint] = (float)(10.0 * Math.Log10(pfLine[nPoint])); 
+                                        pfdB[nAline, nPoint] = (float)(10.0 * Math.Log10(pfLine[nPoint]));
                                     }
                                 }
+
+                                processElastography(pfdB, ref pfdBDiff, ref pfdBEven, ref pfdBOdd);
+
+                                Buffer.BlockCopy(pfdBDiff, 0, UIData.pfURImage, 0, pfdBDiff.Length * sizeof(float)); 
 
                                 /* End: 20211211 editing by JL */
 

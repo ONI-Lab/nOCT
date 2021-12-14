@@ -844,12 +844,15 @@
             <ni:IntensityGraph Grid.Row="2" Grid.Column="2" Name="graphURMain" RenderMode="Raster" >
                 <!-- Inverts Y-axis-->
                 <ni:IntensityGraph.VerticalAxis>
-                    <ni:AxisSingle IsInverted="True" Adjuster="FitExactly"/>
+                    <ni:AxisSingle IsInverted="True" MajorGridLines="{x:Null}" Name="axisURMainVertical" Adjuster="None" />
                 </ni:IntensityGraph.VerticalAxis >
+                <ni:IntensityGraph.HorizontalAxis>
+                    <ni:AxisSingle Name="axisURMainHorizontal" MajorGridLines="{x:Null}" Adjuster="None" />
+                </ni:IntensityGraph.HorizontalAxis>
                 <ni:IntensityGraph.ColorScale>
                     <ni:ColorScale Location ="Far" LowColor="Blue" HighColor="Red">
                         <ni:ColorScaleMarker Color="Blue" Value="0"/>
-                        <ni:ColorScaleMarker Color="Red" Value="16384"/>
+                        <ni:ColorScaleMarker Color="Red" Value="100"/>
                     </ni:ColorScale>
                 </ni:IntensityGraph.ColorScale>
             </ni:IntensityGraph>
