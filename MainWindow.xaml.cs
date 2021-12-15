@@ -1284,8 +1284,8 @@ namespace nOCT
 
             // initialization
             double dLineTriggerRate = UIData.nLLLineRate;
-            int nNumberLines = 2048;
-            int nNumberFrames = 512;
+            int nNumberLines = UIData.nLLLinesPerChunk * UIData.nLLChunksPerImage; // 2048;
+            int nNumberFrames = UIData.nLLImagesPerVolume; // 512;
 
 #if (TRUEDAQ)
             // counter task
