@@ -536,6 +536,44 @@ namespace nOCT
                 #endregion UL
 
                 #region UR
+                /* Begin: 20211213 editing by JL: UR display */
+                switch (threadData.nProcess2Type)
+                {
+                    case 0:
+                        threadData.strProcess2ThreadStatus = "...none...";
+                        break;
+                    case 1:
+                        threadData.strProcess2ThreadStatus = "...intensity...";
+                        break;
+                    case 2:
+                        threadData.strProcess2ThreadStatus = "...attenuation...";
+                        break;
+                    case 3:
+                        threadData.strProcess2ThreadStatus = "...phase...";
+                        break;
+                    case 4:
+                        threadData.strProcess2ThreadStatus = "...polarization...";
+                        break;
+                    case 5:
+                        threadData.strProcess2ThreadStatus = "...angiography...";
+                        break;
+                    case 6:
+                        threadData.strProcess2ThreadStatus = "...elastography...";
+
+                        
+
+
+
+                        break;
+                    case 7:
+                        threadData.strProcess2ThreadStatus = "...spectroscopy...";
+                        break;
+                    case 8:
+                        threadData.strProcess2ThreadStatus = "...spectral binning...";
+                        break;
+                }   // switch (nProcess2Type
+
+                /* End: 20211213 editing by JL: UR display */
 
                 graphURLeft.Refresh();
                 graphURTop.Refresh();
@@ -838,21 +876,21 @@ namespace nOCT
                     break;
             }  // switch (UIData.nULDisplayIndex
 
+            /* Begin: 20211211 editing by JL: halve the vertical display */
             UIData.pfULLeft = new float[4, threadData.nRawAlineLength];
             graphULLeft.DataSource = UIData.pfULLeft;
-            axisULLeftHorizontal.Range = new Range<int>(0, threadData.nRawAlineLength - 1);
+            axisULLeftHorizontal.Range = new Range<int>(0, threadData.nProcessedAlineLength - 1);
             axisULLeftVertical.Range = new Range<float>(fMin, fMax);
 
             UIData.pfULTop = new float[1, threadData.nRawNumberAlines];
             graphULTop.DataSource = UIData.pfULTop;
             axisULTopHorizontal.Range = new Range<int>(0, threadData.nRawNumberAlines - 1);
             axisULTopVertical.Range = new Range<float>(fMin, fMax);
-
-            /* Begin: 20211211 editing by JL: halve the vertical display */
+            
             UIData.pfULImage = new float[threadData.nRawNumberAlines, threadData.nRawAlineLength];
             //UIData.pfULImage = new float[threadData.nRawNumberAlines, threadData.nProcessedAlineLength];
             graphULMain.DataSource = UIData.pfULImage;
-            axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nRawAlineLength));
+            axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nProcessedAlineLength));
             /* End: 20211211 editing by JL */
             axisULMainHorizontal.Range = new Range<float>(0f, (float)(threadData.nRawNumberAlines));
             ColorScaleMarker[] csMarker = new ColorScaleMarker[2];
@@ -1100,6 +1138,24 @@ namespace nOCT
             // GC.Collect();
         }   // private void btnURIntensityApply_Click
 
+        private void rbUROCEDisplayMode_Checked_Intensity(object sender, RoutedEventArgs e)
+        {
+            try { UIData.nUROCEDisplayModeRadioButtonIndex = 0; }
+            catch { }            
+
+            cbURIntensityDisplayOptions.IsEnabled = true;
+            cbUROCEDisplayOptions.IsEnabled = false;            
+        }
+
+        private void rbUROCEDisplayMode_Checked_OCE(object sender, RoutedEventArgs e)
+        {
+            try { UIData.nUROCEDisplayModeRadioButtonIndex = 1; }
+            catch { }
+            
+            cbURIntensityDisplayOptions.IsEnabled = false;
+            cbUROCEDisplayOptions.IsEnabled = true;
+            // int a = 0; 
+        }
 
         /* End: 20211208 editing by JL */
 
@@ -3450,7 +3506,7 @@ namespace nOCT
                             pfSmoothTemp[nX, nY] = fSum * fAvgFactorX;
 
                         } // if (nX == 0) // the first pixel
-                        else
+                        else // the rest pixels
                         {
                             fSum = pfSmoothTemp[nX - 1, nY] / fAvgFactorX;
                             // left-most point in the kernel
@@ -4625,6 +4681,10 @@ namespace nOCT
             float[,] pfdBDiff = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
             float[,] pfdBEven = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
             float[,] pfdBOdd = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            float[,] pfOCEStrain = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            double dOCEStrain; 
+            double dLambda = 560e-9; // center wavelength
+            double dK = 2 * Math.PI / dLambda; // wavenumber
 
             switch (threadData.nProcess2Type)
             {
@@ -4753,6 +4813,7 @@ namespace nOCT
                             case 6:
                                 threadData.strProcess2ThreadStatus = "...elastography...";
                                 /* Begin: 20211211 editing by JL */
+                                
 
                                 // actual elastography processing
                                 for (nAline = 0; nAline < nProcessedNumberLines; nAline++)
@@ -4768,7 +4829,49 @@ namespace nOCT
 
                                 processElastography(pfdB, ref pfdBDiff, ref pfdBEven, ref pfdBOdd);
 
-                                Buffer.BlockCopy(pfdBDiff, 0, UIData.pfURImage, 0, pfdBDiff.Length * sizeof(float)); 
+                                // intensity / OCE display options 
+                                switch (UIData.nUROCEDisplayModeRadioButtonIndex)
+                                {
+                                    case 0: // display intensity
+
+                                        switch (UIData.nUROCEIntensityDisplayIndex)
+                                        {
+                                            case 0: // all lines
+                                                Buffer.BlockCopy(pfdB, 0, UIData.pfURImage, 0, pfdB.Length * sizeof(float));
+                                                break;
+                                            case 1: // even lines
+                                                Buffer.BlockCopy(pfdBEven, 0, UIData.pfURImage, 0, pfdBEven.Length * sizeof(float));
+                                                break;
+                                            case 2: // odd lines
+                                                Buffer.BlockCopy(pfdBOdd, 0, UIData.pfURImage, 0, pfdBOdd.Length * sizeof(float));
+                                                break; 
+                                        }
+
+                                        break;
+                                    case 1: // display OCE
+
+                                        switch (UIData.nUROCEOCEDisplayIndex)
+                                        {                                            
+                                            case 0: // OCE strain
+                                                for (int nX = 0; nX < nProcessedNumberLines >> 1; nX++)
+                                                {
+                                                    for (int nY = 0; nY < nProcessedLineLength; nY++)
+                                                    {
+                                                        dOCEStrain = (1e6) * Math.Sqrt((4.0 / Math.Pow(dK, 2)) * (1 - Math.Pow(10, -(double)pfdBDiff[nX, nY] / 10)));
+                                                        pfOCEStrain[nX, nY] = (float)dOCEStrain;
+                                                    }
+                                                        
+                                                }
+                                                Buffer.BlockCopy(pfOCEStrain, 0, UIData.pfURImage, 0, pfOCEStrain.Length * sizeof(float));
+                                                break;
+                                            case 1: // dB difference
+                                                Buffer.BlockCopy(pfdBDiff, 0, UIData.pfURImage, 0, pfdBDiff.Length * sizeof(float));
+                                                break;
+                                        }
+                                        break;
+                                } // switch (UIData.nUROCEDisplayModeRadioButtonIndex)
+
+                                
 
                                 /* End: 20211211 editing by JL */
 
@@ -5282,6 +5385,28 @@ namespace nOCT
             set { _nURIntensityCUDA = value; OnPropertyChanged(name_nURIntensityCUDA); }
         }   // public int nURIntensityCUDA
         /* End: 20201210 editing by JL */
+
+        /* Begin: 20201213 editing by JL: elastography UI on UR */
+        public int nUROCEDisplayModeRadioButtonIndex = -1;
+
+        public string name_nUROCEIntensityDisplayIndex = "nUROCEIntensityDisplayIndex";
+        private int _nUROCEIntensityDisplayIndex;
+        public int nUROCEIntensityDisplayIndex
+        {
+            get { return _nUROCEIntensityDisplayIndex; }
+            set { _nUROCEIntensityDisplayIndex = value; OnPropertyChanged(name_nUROCEIntensityDisplayIndex); }
+        }   // public int nUROCEIntensityDisplayIndex
+
+        public string name_nUROCEOCEDisplayIndex = "nUROCEOCEDisplayIndex";
+        private int _nUROCEOCEDisplayIndex;
+        public int nUROCEOCEDisplayIndex
+        {
+            get { return _nUROCEOCEDisplayIndex; }
+            set { _nUROCEOCEDisplayIndex = value; OnPropertyChanged(name_nUROCEOCEDisplayIndex); }
+        }   // public int nUROCEOCEDisplayIndex
+
+
+        /* End: 20201213 editing by JL */
 
         public string name_nURSpectralBinningTop = "nURSpectralBinningTop";
         private int _nURSpectralBinningTop;

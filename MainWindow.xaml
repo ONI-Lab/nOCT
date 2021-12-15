@@ -687,16 +687,18 @@
 
                             <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="4" TextDecorations="Underline">graph display mode</TextBlock>
 
-                            <RadioButton Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" GroupName="rbUROCEDisplayMode" IsChecked="True">intensity:</RadioButton>
-                            <RadioButton Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="9" GroupName="rbUROCEDisplayMode">OCE:</RadioButton>
+                            <RadioButton Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" GroupName="rbUROCEDisplayMode" 
+                                         Checked="rbUROCEDisplayMode_Checked_Intensity">intensity:</RadioButton>
+                            <RadioButton Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="9" GroupName="rbUROCEDisplayMode" 
+                                         Checked="rbUROCEDisplayMode_Checked_OCE">OCE:</RadioButton>
 
-                            <ComboBox Grid.Row="6" Grid.Column="4" Grid.ColumnSpan="2" Name="cbURIntensityDisplayOptions"  SelectedIndex="1">
+                            <ComboBox Grid.Row="6" Grid.Column="4" Grid.ColumnSpan="2" Name="cbURIntensityDisplayOptions" SelectedIndex="{Binding nUROCEIntensityDisplayIndex}" IsEnabled="False">
                                 <ComboBoxItem IsSelected="True">all lines</ComboBoxItem>
-                                <ComboBoxItem>odd lines</ComboBoxItem>
                                 <ComboBoxItem>even lines</ComboBoxItem>
+                                <ComboBoxItem>odd lines</ComboBoxItem>
                             </ComboBox>
 
-                            <ComboBox Grid.Row="7" Grid.Column="4" Grid.ColumnSpan="2" Name="cbUROCEDisplayOptions" SelectedIndex="1">
+                            <ComboBox Grid.Row="7" Grid.Column="4" Grid.ColumnSpan="2" Name="cbUROCEDisplayOptions" SelectedIndex="{Binding nUROCEOCEDisplayIndex}" IsEnabled="False">
                                 <ComboBoxItem IsSelected="True">strain (um)</ComboBoxItem>
                                 <ComboBoxItem>dB difference</ComboBoxItem>
                             </ComboBox>
