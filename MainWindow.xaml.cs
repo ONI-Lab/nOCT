@@ -4,11 +4,11 @@
 //#define TRUEALAZAR
 #undef TRUEALAZAR
 
-//#define TRUEDAQ
-#undef TRUEDAQ
+#define TRUEDAQ
+//#undef TRUEDAQ
 
-//#define TRUEIMAQ
-#undef TRUEIMAQ
+#define TRUEIMAQ
+//#undef TRUEIMAQ
 
 //#define TRUECUDA
 #undef TRUECUDA
@@ -1284,8 +1284,8 @@ namespace nOCT
 
             // initialization
             double dLineTriggerRate = UIData.nLLLineRate;
-            //int nNumberLines = 2048;
-            //int nNumberFrames = 512;
+            int nNumberLines = 2048;
+            int nNumberFrames = 512;
 
 #if (TRUEDAQ)
             // counter task
@@ -1915,19 +1915,19 @@ namespace nOCT
             string strinterfaceName0 = "img0";
             char[] pchinterfaceName0 = new char[64];
             pchinterfaceName0 = strinterfaceName0.ToCharArray();
-            string strinterfaceName1 = "img1";
-            char[] pchinterfaceName1 = new char[64];
-            pchinterfaceName1 = strinterfaceName1.ToCharArray();
+            //string strinterfaceName1 = "img1";
+            //char[] pchinterfaceName1 = new char[64];
+            //pchinterfaceName1 = strinterfaceName1.ToCharArray();
             int errInfo = 0;
 
-            errInfo = nOCTimaqWrapper.InitializeImaq(pchinterfaceName0, pchinterfaceName1, UIData.nLLIMAQLineLength, UIData.nLLLinesPerChunk, errInfo);
+            errInfo = nOCTimaqWrapper.InitializeImaq(pchinterfaceName0, UIData.nLLIMAQLineLength, UIData.nLLLinesPerChunk, errInfo);
 
             // since the initialization of imaq sometimes fails, there is while loop to make the initialiazation successed 
             while (errInfo < 0)
             {
                 nOCTimaqWrapper.StopAcquisition();
                 errInfo = 0;
-                errInfo = nOCTimaqWrapper.InitializeImaq(pchinterfaceName0, pchinterfaceName1, UIData.nLLIMAQLineLength, UIData.nLLLinesPerChunk, errInfo);
+                errInfo = nOCTimaqWrapper.InitializeImaq(pchinterfaceName0, UIData.nLLIMAQLineLength, UIData.nLLLinesPerChunk, errInfo);
             }
 
             if (errInfo < 0)
@@ -1959,7 +1959,8 @@ namespace nOCT
                 nOCTimaqWrapper.StartAcquisition();
 
                 int bufferIndex0 = 0;   // this should be set outside of the loop?  bhp  // I put this two line codes out of the while loop_HY
-                int bufferIndex1 = 0;
+                int lostBuffers = 0; 
+                // int bufferIndex1 = 0;
 
                 #endif  // TRUEIMAQ
 
@@ -1984,8 +1985,8 @@ namespace nOCT
 
                                 for(int nChunk=0 ; nChunk<UIData.nLLChunksPerImage; nChunk++)
                                 {
-                                    nOCTimaqWrapper.RealAcquisition0(bufferIndex0, threadData.nodeAcquire.Value.pnIMAQParallel[nChunk]);
-                                    nOCTimaqWrapper.RealAcquisition1(bufferIndex1, threadData.nodeAcquire.Value.pnIMAQPerpendicular[nChunk]);
+                                    nOCTimaqWrapper.RealAcquisition0(ref bufferIndex0, ref lostBuffers, threadData.nodeAcquire.Value.pnIMAQParallel[nChunk]);
+                                    // nOCTimaqWrapper.RealAcquisition1(bufferIndex1, threadData.nodeAcquire.Value.pnIMAQPerpendicular[nChunk]);
                                 }
 
                                 #endif  // TRUEIMAQ
@@ -6505,24 +6506,24 @@ namespace nOCT
 
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\Hang\\Lab Razer\\nOCTImaq\\x64\\Debug\\nOCTImaq.dll")]
-        public static extern int InitializeImaq(char[] interfaceName0, char[] interfaceName1, int nImaqLineLength, int nLinesPerChunk, int errInfo);
+        [DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera.dll")]
+        public static extern int InitializeImaq(char[] interfaceName0, int nImaqLineLength, int nLinesPerChunk, int errInfo);
 
         
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\Hang\\Lab Razer\\nOCTImaq\\x64\\Debug\\nOCTImaq.dll")]
+        [DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera.dll")]
         public static extern void StartAcquisition();
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\Hang\\Lab Razer\\nOCTImaq\\x64\\Debug\\nOCTImaq.dll")]
-        public static extern void RealAcquisition0(int bufferIndex0, Int16[] pnTemp0);
+        [DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera.dll")]
+        public static extern void RealAcquisition0(ref int bufferIndex0, ref int lostBuffers, Int16[] pnTemp0);
+
+        //[SuppressUnmanagedCodeSecurityAttribute()]
+        //[DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera.dll")]
+        //public static extern void RealAcquisition1(int bufferIndex1, Int16[] pnTemp1);
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\Hang\\Lab Razer\\nOCTImaq\\x64\\Debug\\nOCTImaq.dll")]
-        public static extern void RealAcquisition1(int bufferIndex1, Int16[] pnTemp1);
-
-        [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\Hang\\Lab Razer\\nOCTImaq\\x64\\Debug\\nOCTImaq.dll")]
+        [DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera.dll")]
         public static extern void StopAcquisition();
 
         
