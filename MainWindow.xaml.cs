@@ -7,8 +7,8 @@
 #define TRUEDAQ
 //#undef TRUEDAQ
 
-//#define TRUEIMAQ
-#undef TRUEIMAQ
+#define TRUEIMAQ
+//#undef TRUEIMAQ
 
 //#define TRUECUDA
 #undef TRUECUDA
@@ -287,6 +287,10 @@ namespace nOCT
                     if (parametername == UIData.name_nLLDwellSlow) UIData.nLLDwellSlow = int.Parse(parametervalue);
                     if (parametername == UIData.name_nLLRoundingFast) UIData.nLLRoundingFast = int.Parse(parametervalue);
                     if (parametername == UIData.name_nLLRoundingSlow) UIData.nLLRoundingSlow = int.Parse(parametervalue);
+                    if (parametername == UIData.name_nLLFastGalvoStart) UIData.nLLFastGalvoStart = int.Parse(parametervalue);
+                    if (parametername == UIData.name_nLLFastGalvoEnd) UIData.nLLFastGalvoEnd = int.Parse(parametervalue);
+                    if (parametername == UIData.name_nLLSlowGalvoStart) UIData.nLLSlowGalvoStart = int.Parse(parametervalue);
+                    if (parametername == UIData.name_nLLSlowGalvoEnd) UIData.nLLSlowGalvoEnd = int.Parse(parametervalue);
 
                     #endregion  // LL
 
@@ -415,6 +419,10 @@ namespace nOCT
             sw.WriteLine(UIData.name_nLLDwellSlow + "=`" + UIData.nLLDwellSlow + "'");
             sw.WriteLine(UIData.name_nLLRoundingFast + "=`" + UIData.nLLRoundingFast + "'");
             sw.WriteLine(UIData.name_nLLRoundingSlow + "=`" + UIData.nLLRoundingSlow + "'");
+            sw.WriteLine(UIData.name_nLLFastGalvoStart + "=`" + UIData.nLLFastGalvoStart + "'");
+            sw.WriteLine(UIData.name_nLLFastGalvoEnd + "=`" + UIData.nLLFastGalvoEnd + "'");
+            sw.WriteLine(UIData.name_nLLSlowGalvoStart + "=`" + UIData.nLLSlowGalvoStart + "'");
+            sw.WriteLine(UIData.name_nLLSlowGalvoEnd + "=`" + UIData.nLLSlowGalvoEnd + "'");
 
             #endregion  // LL
 
@@ -586,6 +594,8 @@ namespace nOCT
                 UIData.nLLFileNumber = threadData.nFileNumber;
                 UIData.nLLFileCycle = threadData.nFramePosition;
 
+                threadData.bRecord = UIData.bLLFileRecord;
+
                 #endregion  // LL
 
                 #region LR
@@ -603,7 +613,7 @@ namespace nOCT
 
                 if ((nodeList.Count() > 1) && (UIData.bLRDiagnostics))
                 {
-                    threadData.bRecord = UIData.bLLFileRecord;
+                    
                     Array.Clear(UIData.pnLinkedList, 0, UIData.pnLinkedList.Length);
                     LinkedListNode<CDataNode> nodeTemp = nodeList.First;
                     for (int nNode = 0; nNode < nodeList.Count; nNode++)
@@ -1287,6 +1297,16 @@ namespace nOCT
             int nNumberLines = UIData.nLLLinesPerChunk * UIData.nLLChunksPerImage; // 2048;
             int nNumberFrames = UIData.nLLImagesPerVolume; // 512;
 
+            float fFastGalvoStart = UIData.nLLFastGalvoStart;
+            float fFastGalvoStop = UIData.nLLFastGalvoEnd;
+            float fSlowGalvoStart = UIData.nLLSlowGalvoStart;
+            float fSlowGalvoStop = UIData.nLLSlowGalvoEnd;
+            float nPolModState1 = 0; // UIData.nLLRoundingFast;
+            float nPolModState2 = 0; // UIData.nLLRoundingSlow;
+
+            int nPolarizationStates = 2;
+            int nNumberLinerPerState = nNumberLines / nPolarizationStates;
+
 #if (TRUEDAQ)
             // counter task
             Task taskCtr = new Task();
@@ -1295,7 +1315,6 @@ namespace nOCT
 
             /* Begin: 20211214 editing by JL: add auxiliary trigger line */
 
-            // digital task
             Task taskDig = new Task();
             DigitalMultiChannelWriter digWriter = new DigitalMultiChannelWriter(taskDig.Stream);
             taskDig.DOChannels.CreateChannel("Dev1/port0/line0", "digLineTrigger", ChannelLineGrouping.OneChannelForEachLine);
@@ -1308,7 +1327,7 @@ namespace nOCT
             DigitalWaveform[] digWFM;
             digWFM = new DigitalWaveform[4];
 
-            int i = 0, j, k;
+            int i = 0, j, k, l;
             // line trigger
             digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
             for (j = 0; j < nNumberFrames; j++)
@@ -1368,15 +1387,19 @@ namespace nOCT
             taskAna.AOChannels.CreateVoltageChannel("Dev1/ao2", "anaPolMod", -5.0, +5.0, AOVoltageUnits.Volts);
             taskAna.Timing.ConfigureSampleClock("/Dev1/PFI7", dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
 
+            /* Begin: 20211214 editing by JL: galvo voltage control */
 
             double[,] anaWFM = new double[3, nNumberFrames * nNumberLines];
             // fast galvo
             i = 0;
             for (j = 0; j < nNumberFrames; j++)
             {
-                for (k = 0; k < nNumberLines; k++)
+                for (k = 0; k < nNumberLinerPerState; k++)
                 {
-                    anaWFM[i, j * nNumberLines + k] = (1.0 * k) / (0.5 * nNumberLines) * 2.0;
+                    for (l = 0; l < nPolarizationStates; l++)
+                    {
+                        anaWFM[i, j * nNumberLines + 2 * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberLinerPerState;
+                    }
                 }
             }
             // slow galvo
@@ -1385,7 +1408,7 @@ namespace nOCT
             {
                 for (k = 0; k < nNumberLines; k++)
                 {
-                    anaWFM[i, j * nNumberLines + k] = (1.0 * j) / (0.5 * nNumberLines) * 2.0;
+                    anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
                 }
             }
             // pol mod
@@ -1394,10 +1417,14 @@ namespace nOCT
             {
                 for (k = 0; k < nNumberLines; k += 2)
                 {
-                    anaWFM[i, j * nNumberLines + k] = -1.0;
-                    anaWFM[i, j * nNumberLines + k + 1] = 1.0;
+                    anaWFM[i, j * nNumberLines + k] = nPolModState1;
+                    anaWFM[i, j * nNumberLines + k + 1] = nPolModState2;
                 }
             }
+
+            /* End: 20211214 editing by JL: galvo voltage control */
+
+
             anaWriter.WriteMultiSample(false, anaWFM);
 #endif
 
@@ -1420,6 +1447,11 @@ namespace nOCT
             if (WaitHandle.WaitAny(pweStart) == 1)
             {
                 threadData.strOutputThreadStatus = "GO!";
+                // wait for camera sync event 
+                threadData.mreCameraSync.WaitOne();
+
+                // let the thread sleep for 1 ms
+                Thread.Sleep(1);
 
 #if (TRUEDAQ)
                 // start tasks
@@ -1430,17 +1462,31 @@ namespace nOCT
 
                 while (WaitHandle.WaitAny(pweLoop) == 1)
                 {
+                    /* Begin: 20210501 editing by JL */
+                    if (threadData.mreOutputUpdate.WaitOne(0) == true)
+                    {
+                        fFastGalvoStart = UIData.nLLFastGalvoStart;
+                        fFastGalvoStop = UIData.nLLFastGalvoEnd;
+                        fSlowGalvoStart = UIData.nLLSlowGalvoStart;
+                        fSlowGalvoStop = UIData.nLLSlowGalvoEnd;
+                    } // if(threadData.mreOutputUpdate.WaitOne(0) == true)
+                    /* End: 20210501 editing by JL */
+
                     threadData.mreOutputUpdate.Reset();
                     threadData.strOutputThreadStatus = "updating...";
 
 #if (TRUEDAQ)
+                    /* Begin: 20211214 editing by JL: galvo voltage control */
                     // fast galvo
                     i = 0;
                     for (j = 0; j < nNumberFrames; j++)
                     {
-                        for (k = 0; k < nNumberLines; k++)
+                        for (k = 0; k < nNumberLinerPerState; k++)
                         {
-                            anaWFM[i, j * nNumberLines + k] = (1.0 * k) / (0.5 * nNumberLines) * 2.0;
+                            for (l = 0; l < nPolarizationStates; l++)
+                            {
+                                anaWFM[i, j * nNumberLines + 2 * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberLinerPerState;
+                            }
                         }
                     }
                     // slow galvo
@@ -1449,7 +1495,7 @@ namespace nOCT
                     {
                         for (k = 0; k < nNumberLines; k++)
                         {
-                            anaWFM[i, j * nNumberLines + k] = (1.0 * j) / (0.5 * nNumberLines) * 2.0;
+                            anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
                         }
                     }
                     // pol mod
@@ -1458,10 +1504,12 @@ namespace nOCT
                     {
                         for (k = 0; k < nNumberLines; k += 2)
                         {
-                            anaWFM[i, j * nNumberLines + k] = -1.0;
-                            anaWFM[i, j * nNumberLines + k + 1] = 1.0;
+                            anaWFM[i, j * nNumberLines + k] = nPolModState1;
+                            anaWFM[i, j * nNumberLines + k + 1] = nPolModState2;
                         }
                     }
+                    /* End: 20211214 editing by JL: galvo voltage control */
+
                     anaWriter.BeginWriteMultiSample(false, anaWFM, null, null);
 #endif
 
@@ -1981,6 +2029,9 @@ namespace nOCT
                 // start acquisition call to dll
                 nOCTimaqWrapper.StartAcquisition();
 
+                //set event for camera sync    
+                threadData.mreCameraSync.Set();
+
                 int bufferIndex0 = 0;   // this should be set outside of the loop?  bhp  // I put this two line codes out of the while loop_HY
                 int lostBuffers = 0; 
                 // int bufferIndex1 = 0;
@@ -2284,7 +2335,8 @@ namespace nOCT
                         if (nodeSave.Value.nAcquired > 0)
                         {
                             /* Begin: 20201208 editing by JL */
-                            threadData.nSaveNodeID = nodeSave.Value.nNodeID;                            
+                            threadData.nSaveNodeID = nodeSave.Value.nNodeID;
+                            nodeSave.Value.bRecord = threadData.bRecord;
                             if (nodeSave.Value.bRecord)
                             {
                                 // actual save
@@ -5716,6 +5768,41 @@ namespace nOCT
             set { _nLLRoundingSlow = value; OnPropertyChanged(name_nLLRoundingSlow); }
         }   // public int nLLRoundingSlow
 
+        /* Begin: 20211214 editing by JL: add fast/slow galvo control */
+        public string name_nLLFastGalvoStart = "nLLFastGalvoStart";
+        private int _nLLFastGalvoStart;
+        public int nLLFastGalvoStart
+        {
+            get { return _nLLFastGalvoStart; }
+            set { _nLLFastGalvoStart = value; OnPropertyChanged(name_nLLFastGalvoStart); }
+        }
+
+        public string name_nLLFastGalvoEnd = "nLLFastGalvoEnd";
+        private int _nLLFastGalvoEnd;
+        public int nLLFastGalvoEnd
+        {
+            get { return _nLLFastGalvoEnd; }
+            set { _nLLFastGalvoEnd = value; OnPropertyChanged(name_nLLFastGalvoEnd); }
+        }
+
+        public string name_nLLSlowGalvoStart = "nLLSlowGalvoStart";
+        private int _nLLSlowGalvoStart;
+        public int nLLSlowGalvoStart
+        {
+            get { return _nLLSlowGalvoStart; }
+            set { _nLLSlowGalvoStart = value; OnPropertyChanged(name_nLLSlowGalvoStart); }
+        }
+
+        public string name_nLLSlowGalvoEnd = "nLLSlowGalvoEnd";
+        private int _nLLSlowGalvoEnd;
+        public int nLLSlowGalvoEnd
+        {
+            get { return _nLLSlowGalvoEnd; }
+            set { _nLLSlowGalvoEnd = value; OnPropertyChanged(name_nLLSlowGalvoEnd); }
+        }
+
+        /* End: 20211214 editing by JL: add fast/slow galvo control */
+
         #endregion
 
         #region LR
@@ -6234,6 +6321,9 @@ namespace nOCT
         public ManualResetEvent mreAcquireIMAQDead;
         public AutoResetEvent areAcquireIMAQGo;
         public AutoResetEvent areAcquireIMAQComplete;
+        /* 20210127 HY for Camera Sync*/
+        public ManualResetEvent mreCameraSync;
+        /* 20210127 HY for Camera Sync*/
         public string strAcquireIMAQThreadStatus = "XIMQ";
 #endregion
 
@@ -6371,6 +6461,10 @@ namespace nOCT
             mreAcquireIMAQDead = new ManualResetEvent(false);
             areAcquireIMAQGo = new AutoResetEvent(false);
             areAcquireIMAQComplete = new AutoResetEvent(false);
+            /* 20210127 HY for Camera Sync*/
+            mreCameraSync = new ManualResetEvent(false);
+            /* 20210127 HY for Camera Sync*/
+
 #endregion
 
 #region SaveThead

@@ -454,7 +454,7 @@
 
                             <TextBlock Grid.Row="9" Grid.Column="1" Text="A-line"/>
                             <TextBox Grid.Row="9" Grid.Column="2" Name="txtURAttenuationALine1" Text="{Binding nURAttenuationAline1}" />
-                            <TextBox Grid.Row="9" Grid.Column="4" Name="txtURAttenuationALine2" Text="{Binding nURAttenuationAline2}" />                            
+                            <TextBox Grid.Row="9" Grid.Column="4" Name="txtURAttenuationALine2" Text="{Binding nURAttenuationAline2}" />
                         </Grid>
                     </TabItem>
 
@@ -899,7 +899,8 @@
                             <ColumnDefinition Width="20" />
                             <ColumnDefinition Width="10" />
                             <ColumnDefinition Width="150" />
-                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="7" />
+                            <ColumnDefinition Width="94"/>
                             <ColumnDefinition Width="40" />
                             <ColumnDefinition Width="10" />
                             <ColumnDefinition Width="150" />
@@ -912,60 +913,60 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1">configuration file</TextBlock>
                         <TextBox Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2" Name="txtLLConfigurationFilename" Text="{Binding strLLConfigurationFilename}" />
-                        <Button Grid.Column="3" Grid.Row="1" Name="btnLLConfigurationLoad" Click="btnLLConfigurationLoad_Click">load</Button>
-                        <Button Grid.Column="3" Grid.Row="2" Name="btnLLConfigurationSave" Click="btnLLConfigurationSave_Click">save</Button>
+                        <Button Grid.Column="3" Grid.Row="1" Name="btnLLConfigurationLoad" Click="btnLLConfigurationLoad_Click" Grid.ColumnSpan="2">load</Button>
+                        <Button Grid.Column="3" Grid.Row="2" Name="btnLLConfigurationSave" Click="btnLLConfigurationSave_Click" Grid.ColumnSpan="2">save</Button>
 
-                        <TextBlock Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="4" FontWeight="Bold" TextDecorations="Underline">Alazar</TextBlock>
+                        <TextBlock Grid.Column="1" Grid.ColumnSpan="4" Grid.Row="4" FontWeight="Bold" TextDecorations="Underline">Alazar</TextBlock>
                         <TextBlock Grid.Column="2" Grid.Row="5">board ID</TextBlock>
-                        <TextBox Grid.Column="3" Grid.Row="5" Name="txtLLAlazarBoard" Text="{Binding strLLAlazarBoard}" />
+                        <TextBox Grid.Column="3" Grid.Row="5" Name="txtLLAlazarBoard" Text="{Binding strLLAlazarBoard}" Grid.ColumnSpan="2" />
                         <TextBlock Grid.Column="2" Grid.Row="6">channel 1</TextBlock>
-                        <CheckBox Grid.Column="3" Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Right" Name="chkLLAlazarCh1" IsChecked="{Binding bLLAlazarCh1}" />
+                        <CheckBox Grid.Column="4" Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Right" Name="chkLLAlazarCh1" IsChecked="{Binding bLLAlazarCh1}" Margin="0,2" />
                         <TextBlock Grid.Column="2" Grid.Row="7">channel 2</TextBlock>
-                        <CheckBox Grid.Column="3" Grid.Row="7" VerticalAlignment="Center" HorizontalAlignment="Right" Name="chkLLAlazarCh2" IsChecked="{Binding bLLAlazarCh2}" />
+                        <CheckBox Grid.Column="4" Grid.Row="7" VerticalAlignment="Center" HorizontalAlignment="Right" Name="chkLLAlazarCh2" IsChecked="{Binding bLLAlazarCh2}" Margin="0,2" />
                         <TextBlock Grid.Column="2" Grid.Row="8">line length</TextBlock>
-                        <TextBox Grid.Column="3" Grid.Row="8" Name="txtLLAlazarLineLength" Text="{Binding nLLAlazarLineLength}" />
+                        <TextBox Grid.Column="3" Grid.Row="8" Name="txtLLAlazarLineLength" Text="{Binding nLLAlazarLineLength}" Grid.ColumnSpan="2" />
                         <TextBlock Grid.Column="2" Grid.Row="9">sampling rate</TextBlock>
-                        <TextBox Grid.Column="3" Grid.Row="9" Name="txtLLAlazarSamplingRate" Text="{Binding nLLAlazarSamplingRate}" />
+                        <TextBox Grid.Column="3" Grid.Row="9" Name="txtLLAlazarSamplingRate" Text="{Binding nLLAlazarSamplingRate}" Grid.ColumnSpan="2" />
 
-                        <TextBlock Grid.Column="5" Grid.ColumnSpan="3" Grid.Row="1" FontWeight="Bold" TextDecorations="Underline">NI DAQ</TextBlock>
-                        <TextBlock Grid.Column="6" Grid.Row="2">device ID</TextBlock>
-                        <TextBox Grid.Column="7" Grid.Row="2" Name="txtLLDAQDevice" Text="{Binding strLLDAQDevice}" />
+                        <TextBlock Grid.Column="6" Grid.ColumnSpan="3" Grid.Row="1" FontWeight="Bold" TextDecorations="Underline">NI DAQ</TextBlock>
+                        <TextBlock Grid.Column="7" Grid.Row="2">device ID</TextBlock>
+                        <TextBox Grid.Column="8" Grid.Row="2" Name="txtLLDAQDevice" Text="{Binding strLLDAQDevice}" />
 
-                        <TextBlock Grid.Column="5" Grid.ColumnSpan="3" Grid.Row="4" FontWeight="Bold" TextDecorations="Underline">NI IMAQ</TextBlock>
-                        <TextBlock Grid.Column="6" Grid.Row="5">camera (parallel)</TextBlock>
-                        <TextBox Grid.Column="7" Grid.Row="5" Name="txtLLIMAQParallel" Text="{Binding strLLIMAQParallel}" />
-                        <TextBlock Grid.Column="6" Grid.Row="6">camera (perpendicular)</TextBlock>
-                        <TextBox Grid.Column="7" Grid.Row="6" Name="txtLLIMAQPerpendicular" Text="{Binding strLLIMAQPerpendicular}" />
-                        <TextBlock Grid.Column="6" Grid.Row="7">line length</TextBlock>
-                        <TextBox Grid.Column="7" Grid.Row="7" Name="txtLLIMAQLineLength" Text="{Binding nLLIMAQLineLength}" />
-                        <TextBlock Grid.Column="6" Grid.Row="8">ring buffers</TextBlock>
-                        <TextBox Grid.Column="7" Grid.Row="8" Name="txtLLIMAQRingBuffers" Text="{Binding nLLIMAQRingBuffers}" />
+                        <TextBlock Grid.Column="6" Grid.ColumnSpan="3" Grid.Row="4" FontWeight="Bold" TextDecorations="Underline">NI IMAQ</TextBlock>
+                        <TextBlock Grid.Column="7" Grid.Row="5">camera (parallel)</TextBlock>
+                        <TextBox Grid.Column="8" Grid.Row="5" Name="txtLLIMAQParallel" Text="{Binding strLLIMAQParallel}" />
+                        <TextBlock Grid.Column="7" Grid.Row="6">camera (perpendicular)</TextBlock>
+                        <TextBox Grid.Column="8" Grid.Row="6" Name="txtLLIMAQPerpendicular" Text="{Binding strLLIMAQPerpendicular}" />
+                        <TextBlock Grid.Column="7" Grid.Row="7">line length</TextBlock>
+                        <TextBox Grid.Column="8" Grid.Row="7" Name="txtLLIMAQLineLength" Text="{Binding nLLIMAQLineLength}" />
+                        <TextBlock Grid.Column="7" Grid.Row="8">ring buffers</TextBlock>
+                        <TextBox Grid.Column="8" Grid.Row="8" Name="txtLLIMAQRingBuffers" Text="{Binding nLLIMAQRingBuffers}" />
 
-                        <TextBlock Grid.Column="9" Grid.ColumnSpan="3" Grid.Row="1" FontWeight="Bold" TextDecorations="Underline">general</TextBlock>
-                        <TextBlock Grid.Column="10" Grid.Row="2">system type</TextBlock>
-                        <ComboBox Grid.Column="11" Grid.Row="2" Name="cbLLSystemType" SelectedIndex="{Binding nLLSystemType}">
+                        <TextBlock Grid.Column="10" Grid.ColumnSpan="3" Grid.Row="1" FontWeight="Bold" TextDecorations="Underline">general</TextBlock>
+                        <TextBlock Grid.Column="11" Grid.Row="2">system type</TextBlock>
+                        <ComboBox Grid.Column="12" Grid.Row="2" Name="cbLLSystemType" SelectedIndex="{Binding nLLSystemType}">
                             <ComboBoxItem>SD-OCT</ComboBoxItem>
                             <ComboBoxItem>PS-SD-OCT</ComboBoxItem>
                             <ComboBoxItem>line field</ComboBoxItem>
                             <ComboBoxItem>OFDI</ComboBoxItem>
                             <ComboBoxItem>PS OFDI</ComboBoxItem>
                         </ComboBox>
-                        <ComboBox Grid.Column="11" Grid.Row="3" Name="cbLLSystemActual" SelectedIndex="{Binding nLLSystemActual}" >
+                        <ComboBox Grid.Column="12" Grid.Row="3" Name="cbLLSystemActual" SelectedIndex="{Binding nLLSystemActual}" >
                             <ComboBoxItem>actual</ComboBoxItem>
                             <ComboBoxItem>data</ComboBoxItem>
                         </ComboBox>
-                        <TextBlock Grid.Column="10" Grid.Row="4">line rate (-1 external)</TextBlock>
-                        <TextBox Grid.Column="11" Grid.Row="4" Name="txtLLLineRate" Text="{Binding nLLLineRate}" />
-                        <TextBlock Grid.Column="10" Grid.Row="5">lines/chunk</TextBlock>
-                        <TextBox Grid.Column="11" Grid.Row="5" Name="txtLLLinesPerChunk" Text="{Binding nLLLinesPerChunk}" />
-                        <TextBlock Grid.Column="10" Grid.Row="6">chunks/image (-1 flip)</TextBlock>
-                        <TextBox Grid.Column="11" Grid.Row="6" Name="txtLLChunksPerImage" Text="{Binding nLLChunksPerImage}" />
-                        <TextBlock Grid.Column="10" Grid.Row="7">images/volume</TextBlock>
-                        <TextBox Grid.Column="11" Grid.Row="7" Name="txtLLImagesPerVolume" Text="{Binding nLLImagesPerVolume}" />
-                        <TextBlock Grid.Column="10" Grid.Row="8">linked list length</TextBlock>
-                        <TextBox Grid.Column="11" Grid.Row="8" Name="txtLLLinkedListLength" Text="{Binding nLLLinkedListLength}" />
-                        <TextBlock Grid.Column="10" Grid.Row="9">CUDA device</TextBlock>
-                        <ComboBox Grid.Column="11" Grid.Row="9" Name="cbLLCUDADevice" SelectedIndex="{Binding nLLCUDADevice}" />
+                        <TextBlock Grid.Column="11" Grid.Row="4">line rate (-1 external)</TextBlock>
+                        <TextBox Grid.Column="12" Grid.Row="4" Name="txtLLLineRate" Text="{Binding nLLLineRate}" />
+                        <TextBlock Grid.Column="11" Grid.Row="5">lines/chunk</TextBlock>
+                        <TextBox Grid.Column="12" Grid.Row="5" Name="txtLLLinesPerChunk" Text="{Binding nLLLinesPerChunk}" />
+                        <TextBlock Grid.Column="11" Grid.Row="6">chunks/image (-1 flip)</TextBlock>
+                        <TextBox Grid.Column="12" Grid.Row="6" Name="txtLLChunksPerImage" Text="{Binding nLLChunksPerImage}" />
+                        <TextBlock Grid.Column="11" Grid.Row="7">images/volume</TextBlock>
+                        <TextBox Grid.Column="12" Grid.Row="7" Name="txtLLImagesPerVolume" Text="{Binding nLLImagesPerVolume}" />
+                        <TextBlock Grid.Column="11" Grid.Row="8">linked list length</TextBlock>
+                        <TextBox Grid.Column="12" Grid.Row="8" Name="txtLLLinkedListLength" Text="{Binding nLLLinkedListLength}" />
+                        <TextBlock Grid.Column="11" Grid.Row="9">CUDA device</TextBlock>
+                        <ComboBox Grid.Column="12" Grid.Row="9" Name="cbLLCUDADevice" SelectedIndex="{Binding nLLCUDADevice}" />
 
                     </Grid>
                 </TabItem>
@@ -1048,7 +1049,13 @@
                         <TextBlock Grid.Column="11" Grid.Row="6">rounding (fast, slow)</TextBlock>
                         <TextBox Grid.Column="12" Grid.Row="6" Name="txtLLRoundingFast" Text="{Binding nLLRoundingFast}" />
                         <TextBox Grid.Column="14" Grid.Row="6" Name="txtLLRoundingSlow" Text="{Binding nLLRoundingSlow}" />
-                        <Button Grid.Column="11" Grid.ColumnSpan="4" Grid.Row="7" Name="btnLLGalvoUpdate" Click="btnLLGalvoUpdate_Click">update</Button>
+                        <TextBlock Grid.Column="11" Grid.Row="7">fast axis range in V</TextBlock>
+                        <TextBox Grid.Column="12" Grid.Row="7" Name="txtLLFastStart" Text="{Binding nLLFastGalvoStart}" />
+                        <TextBox Grid.Column="14" Grid.Row="7" Name="txtLLFastEnd" Text="{Binding nLLFastGalvoEnd}" />
+                        <TextBlock Grid.Column="11" Grid.Row="8">slow axis range in V</TextBlock>
+                        <TextBox Grid.Column="12" Grid.Row="8" Name="txtLLSlowStart" Text="{Binding nLLSlowGalvoStart}" />
+                        <TextBox Grid.Column="14" Grid.Row="8" Name="txtLLSlowEnd" Text="{Binding nLLSlowGalvoEnd}" />
+                        <Button Grid.Column="11" Grid.ColumnSpan="4" Grid.Row="9" Name="btnLLGalvoUpdate" Click="btnLLGalvoUpdate_Click">update</Button>
 
                     </Grid>
                 </TabItem>
