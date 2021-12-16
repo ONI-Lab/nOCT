@@ -7,8 +7,8 @@
 #define TRUEDAQ
 //#undef TRUEDAQ
 
-#define TRUEIMAQ
-//#undef TRUEIMAQ
+//#define TRUEIMAQ
+#undef TRUEIMAQ
 
 //#define TRUECUDA
 #undef TRUECUDA
@@ -1293,19 +1293,23 @@ namespace nOCT
             taskCtr.COChannels.CreatePulseChannelFrequency("Dev1/ctr0", "ctrClock", COPulseFrequencyUnits.Hertz, COPulseIdleState.Low, 0.0, 2 * dLineTriggerRate, 0.5);
             taskCtr.Timing.ConfigureImplicit(SampleQuantityMode.ContinuousSamples, 1000);
 
+            /* Begin: 20211214 editing by JL: add auxiliary trigger line */
+
             // digital task
             Task taskDig = new Task();
             DigitalMultiChannelWriter digWriter = new DigitalMultiChannelWriter(taskDig.Stream);
             taskDig.DOChannels.CreateChannel("Dev1/port0/line0", "digLineTrigger", ChannelLineGrouping.OneChannelForEachLine);
             taskDig.DOChannels.CreateChannel("Dev1/port0/line1", "digFrameTrigger", ChannelLineGrouping.OneChannelForEachLine);
-            taskDig.DOChannels.CreateChannel("Dev1/port0/line2", "digVolumeTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            taskDig.DOChannels.CreateChannel("Dev1/port0/line2", "digVolumeTrigger", ChannelLineGrouping.OneChannelForEachLine);            
+            taskDig.DOChannels.CreateChannel("Dev1/port0/line3", "digAuxiliaryTrigger", ChannelLineGrouping.OneChannelForEachLine);            
             taskDig.Timing.ConfigureSampleClock("/Dev1/Ctr0InternalOutput", 2 * dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
             taskDig.Control(TaskAction.Verify);
 
             DigitalWaveform[] digWFM;
-            digWFM = new DigitalWaveform[3];
-            // line trigger
+            digWFM = new DigitalWaveform[4];
+
             int i = 0, j, k;
+            // line trigger
             digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
             for (j = 0; j < nNumberFrames; j++)
             {
@@ -1315,6 +1319,7 @@ namespace nOCT
                     digWFM[i].Signals[0].States[j * 2 * nNumberLines + k + 1] = DigitalState.ForceUp;
                 }
             }
+
             // frame trigger
             i = 1;
             digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
@@ -1333,8 +1338,26 @@ namespace nOCT
                 for (k = 1; k < 2 * nNumberLines; k++)
                     digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown;
             digWFM[i].Signals[0].States[0] = DigitalState.ForceUp;
+
+            // auxiliary trigger
+            i = 3; 
+            digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
+            for (j = 0; j < nNumberFrames; j++)
+            {
+                for (k = 0; k < 2 * nNumberLines; k++)
+                {
+                    if (k % 4 == 1)
+                        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceUp;
+                    else
+                        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown; // j * 2 * nNumberLines
+                    
+                }
+            }
+
             // write waveform
             digWriter.WriteWaveform(false, digWFM);
+
+            /* End: 20211214 editing by JL: add auxiliary trigger line */
 
 
             // analog waveform
