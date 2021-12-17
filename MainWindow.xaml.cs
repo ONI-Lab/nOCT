@@ -287,10 +287,10 @@ namespace nOCT
                     if (parametername == UIData.name_nLLDwellSlow) UIData.nLLDwellSlow = int.Parse(parametervalue);
                     if (parametername == UIData.name_nLLRoundingFast) UIData.nLLRoundingFast = int.Parse(parametervalue);
                     if (parametername == UIData.name_nLLRoundingSlow) UIData.nLLRoundingSlow = int.Parse(parametervalue);
-                    if (parametername == UIData.name_nLLFastGalvoStart) UIData.nLLFastGalvoStart = int.Parse(parametervalue);
-                    if (parametername == UIData.name_nLLFastGalvoEnd) UIData.nLLFastGalvoEnd = int.Parse(parametervalue);
-                    if (parametername == UIData.name_nLLSlowGalvoStart) UIData.nLLSlowGalvoStart = int.Parse(parametervalue);
-                    if (parametername == UIData.name_nLLSlowGalvoEnd) UIData.nLLSlowGalvoEnd = int.Parse(parametervalue);
+                    if (parametername == UIData.name_fLLFastGalvoStart) UIData.fLLFastGalvoStart = int.Parse(parametervalue);
+                    if (parametername == UIData.name_fLLFastGalvoEnd) UIData.fLLFastGalvoEnd = int.Parse(parametervalue);
+                    if (parametername == UIData.name_fLLSlowGalvoStart) UIData.fLLSlowGalvoStart = int.Parse(parametervalue);
+                    if (parametername == UIData.name_fLLSlowGalvoEnd) UIData.fLLSlowGalvoEnd = int.Parse(parametervalue);
 
                     #endregion  // LL
 
@@ -419,10 +419,10 @@ namespace nOCT
             sw.WriteLine(UIData.name_nLLDwellSlow + "=`" + UIData.nLLDwellSlow + "'");
             sw.WriteLine(UIData.name_nLLRoundingFast + "=`" + UIData.nLLRoundingFast + "'");
             sw.WriteLine(UIData.name_nLLRoundingSlow + "=`" + UIData.nLLRoundingSlow + "'");
-            sw.WriteLine(UIData.name_nLLFastGalvoStart + "=`" + UIData.nLLFastGalvoStart + "'");
-            sw.WriteLine(UIData.name_nLLFastGalvoEnd + "=`" + UIData.nLLFastGalvoEnd + "'");
-            sw.WriteLine(UIData.name_nLLSlowGalvoStart + "=`" + UIData.nLLSlowGalvoStart + "'");
-            sw.WriteLine(UIData.name_nLLSlowGalvoEnd + "=`" + UIData.nLLSlowGalvoEnd + "'");
+            sw.WriteLine(UIData.name_fLLFastGalvoStart + "=`" + UIData.fLLFastGalvoStart + "'");
+            sw.WriteLine(UIData.name_fLLFastGalvoEnd + "=`" + UIData.fLLFastGalvoEnd + "'");
+            sw.WriteLine(UIData.name_fLLSlowGalvoStart + "=`" + UIData.fLLSlowGalvoStart + "'");
+            sw.WriteLine(UIData.name_fLLSlowGalvoEnd + "=`" + UIData.fLLSlowGalvoEnd + "'");
 
             #endregion  // LL
 
@@ -1297,10 +1297,10 @@ namespace nOCT
             int nNumberLines = UIData.nLLLinesPerChunk * UIData.nLLChunksPerImage; // 2048;
             int nNumberFrames = UIData.nLLImagesPerVolume; // 512;
 
-            float fFastGalvoStart = UIData.nLLFastGalvoStart;
-            float fFastGalvoStop = UIData.nLLFastGalvoEnd;
-            float fSlowGalvoStart = UIData.nLLSlowGalvoStart;
-            float fSlowGalvoStop = UIData.nLLSlowGalvoEnd;
+            float fFastGalvoStart = UIData.fLLFastGalvoStart;
+            float fFastGalvoStop = UIData.fLLFastGalvoEnd;
+            float fSlowGalvoStart = UIData.fLLSlowGalvoStart;
+            float fSlowGalvoStop = UIData.fLLSlowGalvoEnd;
             float nPolModState1 = 0; // UIData.nLLRoundingFast;
             float nPolModState2 = 0; // UIData.nLLRoundingSlow;
 
@@ -1317,7 +1317,7 @@ namespace nOCT
 
             Task taskDig = new Task();
             DigitalMultiChannelWriter digWriter = new DigitalMultiChannelWriter(taskDig.Stream);
-            taskDig.DOChannels.CreateChannel("Dev1/port0/line0", "digLineTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            taskDig.DOChannels.CreateChannel("Dev1/port0/line7", "digLineTrigger", ChannelLineGrouping.OneChannelForEachLine);
             taskDig.DOChannels.CreateChannel("Dev1/port0/line1", "digFrameTrigger", ChannelLineGrouping.OneChannelForEachLine);
             taskDig.DOChannels.CreateChannel("Dev1/port0/line2", "digVolumeTrigger", ChannelLineGrouping.OneChannelForEachLine);            
             taskDig.DOChannels.CreateChannel("Dev1/port0/line3", "digAuxiliaryTrigger", ChannelLineGrouping.OneChannelForEachLine);            
@@ -1424,7 +1424,6 @@ namespace nOCT
 
             /* End: 20211214 editing by JL: galvo voltage control */
 
-
             anaWriter.WriteMultiSample(false, anaWFM);
 #endif
 
@@ -1440,9 +1439,9 @@ namespace nOCT
             // initialization complete
             threadData.mreOutputReady.Set();
             threadData.strOutputThreadStatus = "Ready!";
-#endregion
+            #endregion
 
-#region main loop
+            #region main loop 
             threadData.strOutputThreadStatus = "Set...";
             if (WaitHandle.WaitAny(pweStart) == 1)
             {
@@ -1454,21 +1453,24 @@ namespace nOCT
                 Thread.Sleep(1);
 
 #if (TRUEDAQ)
+
                 // start tasks
                 taskCtr.Start();
                 taskDig.Control(TaskAction.Start);
                 taskAna.Control(TaskAction.Start);
+
 #endif
 
                 while (WaitHandle.WaitAny(pweLoop) == 1)
                 {
                     /* Begin: 20210501 editing by JL */
+
                     if (threadData.mreOutputUpdate.WaitOne(0) == true)
                     {
-                        fFastGalvoStart = UIData.nLLFastGalvoStart;
-                        fFastGalvoStop = UIData.nLLFastGalvoEnd;
-                        fSlowGalvoStart = UIData.nLLSlowGalvoStart;
-                        fSlowGalvoStop = UIData.nLLSlowGalvoEnd;
+                        fFastGalvoStart = UIData.fLLFastGalvoStart;
+                        fFastGalvoStop = UIData.fLLFastGalvoEnd;
+                        fSlowGalvoStart = UIData.fLLSlowGalvoStart;
+                        fSlowGalvoStop = UIData.fLLSlowGalvoEnd;
                     } // if(threadData.mreOutputUpdate.WaitOne(0) == true)
                     /* End: 20210501 editing by JL */
 
@@ -1476,7 +1478,7 @@ namespace nOCT
                     threadData.strOutputThreadStatus = "updating...";
 
 #if (TRUEDAQ)
-                    /* Begin: 20211214 editing by JL: galvo voltage control */
+                    /* Begin: 20211215 editing by JL: galvo voltage control */
                     // fast galvo
                     i = 0;
                     for (j = 0; j < nNumberFrames; j++)
@@ -1508,12 +1510,13 @@ namespace nOCT
                             anaWFM[i, j * nNumberLines + k + 1] = nPolModState2;
                         }
                     }
-                    /* End: 20211214 editing by JL: galvo voltage control */
-
+                    /* End: 20211215 editing by JL: galvo voltage control */
+                    // anaWriter.WriteMultiSample(false, anaWFM);
                     anaWriter.BeginWriteMultiSample(false, anaWFM, null, null);
 #endif
 
                     threadData.strOutputThreadStatus = "idle...";
+
                 }
             }
 #endregion
@@ -2033,7 +2036,8 @@ namespace nOCT
                 threadData.mreCameraSync.Set();
 
                 int bufferIndex0 = 0;   // this should be set outside of the loop?  bhp  // I put this two line codes out of the while loop_HY
-                int lostBuffers = 0; 
+                int nCounter = 0; 
+                // int lostBuffers = 0; 
                 // int bufferIndex1 = 0;
 
                 #endif  // TRUEIMAQ
@@ -2059,7 +2063,7 @@ namespace nOCT
 
                                 for(int nChunk=0 ; nChunk<UIData.nLLChunksPerImage; nChunk++)
                                 {
-                                    nOCTimaqWrapper.RealAcquisition0(ref bufferIndex0, ref lostBuffers, threadData.nodeAcquire.Value.pnIMAQParallel[nChunk]);
+                                   nOCTimaqWrapper.RealAcquisition0(bufferIndex0,  threadData.nodeAcquire.Value.pnIMAQParallel[nChunk], nCounter);
                                     // nOCTimaqWrapper.RealAcquisition1(bufferIndex1, threadData.nodeAcquire.Value.pnIMAQPerpendicular[nChunk]);
                                 }
 
@@ -5769,36 +5773,36 @@ namespace nOCT
         }   // public int nLLRoundingSlow
 
         /* Begin: 20211214 editing by JL: add fast/slow galvo control */
-        public string name_nLLFastGalvoStart = "nLLFastGalvoStart";
-        private int _nLLFastGalvoStart;
-        public int nLLFastGalvoStart
+        public string name_fLLFastGalvoStart = "fLLFastGalvoStart";
+        private float _fLLFastGalvoStart;
+        public float fLLFastGalvoStart
         {
-            get { return _nLLFastGalvoStart; }
-            set { _nLLFastGalvoStart = value; OnPropertyChanged(name_nLLFastGalvoStart); }
+            get { return _fLLFastGalvoStart; }
+            set { _fLLFastGalvoStart = value; OnPropertyChanged(name_fLLFastGalvoStart); }
         }
 
-        public string name_nLLFastGalvoEnd = "nLLFastGalvoEnd";
-        private int _nLLFastGalvoEnd;
-        public int nLLFastGalvoEnd
+        public string name_fLLFastGalvoEnd = "fLLFastGalvoEnd";
+        private float _fLLFastGalvoEnd;
+        public float fLLFastGalvoEnd
         {
-            get { return _nLLFastGalvoEnd; }
-            set { _nLLFastGalvoEnd = value; OnPropertyChanged(name_nLLFastGalvoEnd); }
+            get { return _fLLFastGalvoEnd; }
+            set { _fLLFastGalvoEnd = value; OnPropertyChanged(name_fLLFastGalvoEnd); }
         }
 
-        public string name_nLLSlowGalvoStart = "nLLSlowGalvoStart";
-        private int _nLLSlowGalvoStart;
-        public int nLLSlowGalvoStart
+        public string name_fLLSlowGalvoStart = "fLLSlowGalvoStart";
+        private float _fLLSlowGalvoStart;
+        public float fLLSlowGalvoStart
         {
-            get { return _nLLSlowGalvoStart; }
-            set { _nLLSlowGalvoStart = value; OnPropertyChanged(name_nLLSlowGalvoStart); }
+            get { return _fLLSlowGalvoStart; }
+            set { _fLLSlowGalvoStart = value; OnPropertyChanged(name_fLLSlowGalvoStart); }
         }
 
-        public string name_nLLSlowGalvoEnd = "nLLSlowGalvoEnd";
-        private int _nLLSlowGalvoEnd;
-        public int nLLSlowGalvoEnd
+        public string name_fLLSlowGalvoEnd = "fLLSlowGalvoEnd";
+        private float _fLLSlowGalvoEnd;
+        public float fLLSlowGalvoEnd
         {
-            get { return _nLLSlowGalvoEnd; }
-            set { _nLLSlowGalvoEnd = value; OnPropertyChanged(name_nLLSlowGalvoEnd); }
+            get { return _fLLSlowGalvoEnd; }
+            set { _fLLSlowGalvoEnd = value; OnPropertyChanged(name_fLLSlowGalvoEnd); }
         }
 
         /* End: 20211214 editing by JL: add fast/slow galvo control */
@@ -6268,7 +6272,7 @@ namespace nOCT
         public ManualResetEvent mreOutputRun;
         public ManualResetEvent mreOutputKill;
         public ManualResetEvent mreOutputDead;
-        public ManualResetEvent mreOutputUpdate;
+        public ManualResetEvent mreOutputUpdate; 
         public string strOutputThreadStatus = "XXX";
 #endregion
 
@@ -6424,9 +6428,9 @@ namespace nOCT
             mreOutputKill = new ManualResetEvent(false);
             mreOutputDead = new ManualResetEvent(false);
             mreOutputUpdate = new ManualResetEvent(false);
-#endregion
+            #endregion
 
-#region AcquireThread
+            #region AcquireThread
             mreAcquireReady = new ManualResetEvent(false);
             mreAcquireRun = new ManualResetEvent(false);
             mreAcquireKill = new ManualResetEvent(false);
@@ -6623,24 +6627,24 @@ namespace nOCT
 
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera.dll")]
+        [DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera_20211216.dll")]
         public static extern int InitializeImaq(char[] interfaceName0, int nImaqLineLength, int nLinesPerChunk, int errInfo);
 
         
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera.dll")]
+        [DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera_20211216.dll")]
         public static extern void StartAcquisition();
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera.dll")]
-        public static extern void RealAcquisition0(ref int bufferIndex0, ref int lostBuffers, Int16[] pnTemp0);
+        [DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera_20211216.dll")]
+        public static extern void RealAcquisition0(int bufferIndex0,  Int16[] pnTemp0, int nCounter);
 
         //[SuppressUnmanagedCodeSecurityAttribute()]
         //[DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera.dll")]
         //public static extern void RealAcquisition1(int bufferIndex1, Int16[] pnTemp1);
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera.dll")]
+        [DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera_20211216.dll")]
         public static extern void StopAcquisition();
 
         

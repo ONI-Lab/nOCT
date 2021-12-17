@@ -852,9 +852,9 @@
                     <ni:AxisSingle Name="axisURMainHorizontal" MajorGridLines="{x:Null}" Adjuster="None" />
                 </ni:IntensityGraph.HorizontalAxis>
                 <ni:IntensityGraph.ColorScale>
-                    <ni:ColorScale Location ="Far" LowColor="Blue" HighColor="Red">
+                    <ni:ColorScale Location ="Far" LowColor="Blue" HighColor="Yellow">
                         <ni:ColorScaleMarker Color="Blue" Value="0"/>
-                        <ni:ColorScaleMarker Color="Red" Value="100"/>
+                        <ni:ColorScaleMarker Color="Yellow" Value="100"/>
                     </ni:ColorScale>
                 </ni:IntensityGraph.ColorScale>
             </ni:IntensityGraph>
@@ -1050,11 +1050,11 @@
                         <TextBox Grid.Column="12" Grid.Row="6" Name="txtLLRoundingFast" Text="{Binding nLLRoundingFast}" />
                         <TextBox Grid.Column="14" Grid.Row="6" Name="txtLLRoundingSlow" Text="{Binding nLLRoundingSlow}" />
                         <TextBlock Grid.Column="11" Grid.Row="7">fast axis range in V</TextBlock>
-                        <TextBox Grid.Column="12" Grid.Row="7" Name="txtLLFastStart" Text="{Binding nLLFastGalvoStart}" />
-                        <TextBox Grid.Column="14" Grid.Row="7" Name="txtLLFastEnd" Text="{Binding nLLFastGalvoEnd}" />
+                        <TextBox Grid.Column="12" Grid.Row="7" Name="txtLLFastStart" Text="{Binding fLLFastGalvoStart}" />
+                        <TextBox Grid.Column="14" Grid.Row="7" Name="txtLLFastEnd" Text="{Binding fLLFastGalvoEnd}" />
                         <TextBlock Grid.Column="11" Grid.Row="8">slow axis range in V</TextBlock>
-                        <TextBox Grid.Column="12" Grid.Row="8" Name="txtLLSlowStart" Text="{Binding nLLSlowGalvoStart}" />
-                        <TextBox Grid.Column="14" Grid.Row="8" Name="txtLLSlowEnd" Text="{Binding nLLSlowGalvoEnd}" />
+                        <TextBox Grid.Column="12" Grid.Row="8" Name="txtLLSlowStart" Text="{Binding fLLSlowGalvoStart}" />
+                        <TextBox Grid.Column="14" Grid.Row="8" Name="txtLLSlowEnd" Text="{Binding fLLSlowGalvoEnd}" />
                         <Button Grid.Column="11" Grid.ColumnSpan="4" Grid.Row="9" Name="btnLLGalvoUpdate" Click="btnLLGalvoUpdate_Click">update</Button>
 
                     </Grid>
