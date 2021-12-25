@@ -4,11 +4,11 @@
 //#define TRUEALAZAR
 #undef TRUEALAZAR
 
-#define TRUEDAQ
-//#undef TRUEDAQ
+//define TRUEDAQ
+#undef TRUEDAQ
 
-#define TRUEIMAQ
-//#undef TRUEIMAQ
+// define TRUEIMAQ
+#undef TRUEIMAQ
 
 //#define TRUECUDA
 #undef TRUECUDA
@@ -591,10 +591,11 @@ namespace nOCT
 
                 #region LL
 
+ 
                 UIData.nLLFileNumber = threadData.nFileNumber;
                 UIData.nLLFileCycle = threadData.nFramePosition;
 
-                threadData.bRecord = UIData.bLLFileRecord;
+                
 
                 #endregion  // LL
 
@@ -1632,12 +1633,13 @@ namespace nOCT
                             threadData.nodeAcquire.Value.nFileNumber = nFileNumber;
                             threadData.nFramePosition = nFramePosition;
                             threadData.nFileNumber = nFileNumber;
-                            nFileNumber++;
-                            
+                            nFileNumber++;                            
                             nFramePosition++;
 
                             if (nFramePosition > UIData.nLLImagesPerVolume)
-                                nFramePosition = 1; 
+                                nFramePosition = 1;
+
+                            threadData.bRecord = UIData.bLLFileRecord;
                             /* End: 20201208 editing by JL */
 
 
@@ -2377,7 +2379,8 @@ namespace nOCT
                                         fs.Seek(nOffset1, SeekOrigin.Begin);
 
                                         for (int nChunk = 0; nChunk < nNumberChunks; nChunk++)
-                                            Array.Copy(nodeSave.Value.pnIMAQ[nChunk], 0, pnIMAQ, nChunk * nLinesPerChunk * nLineLength, nLinesPerChunk * nLineLength);                                          
+                                            Array.Copy(nodeSave.Value.pnIMAQParallel[nChunk], 0, pnIMAQ, nChunk * nLinesPerChunk * nLineLength, nLinesPerChunk * nLineLength);
+                                        //Array.Copy(nodeSave.Value.pnIMAQ[nChunk], 0, pnIMAQ, nChunk * nLinesPerChunk * nLineLength, nLinesPerChunk * nLineLength);                                          
 
                                         for (int nLine = 0; nLine < nNumberLines; nLine++)
                                             for (int nPoint = 0; nPoint < nLineLength; nPoint++)
