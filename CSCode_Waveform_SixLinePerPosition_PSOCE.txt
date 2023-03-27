@@ -1,0 +1,502 @@
+void OutputThread()
+        {
+            #region initializing
+            threadData.strOutputThreadStatus = "Initializing...";
+
+
+            // initialization
+            double dLineTriggerRate = UIData.nLLLineRate;
+
+
+            int nNumberLines = UIData.nLLLinesPerChunk * UIData.nLLChunksPerImage;
+            int nNumberFrames = UIData.nLLImagesPerVolume;
+            float fFastGalvoStart = UIData.fLLCenterX;
+            float fFastGalvoStop = UIData.fLLCenterY;
+            float fSlowGalvoStart = UIData.fLLRangeFast;
+            float fSlowGalvoStop = UIData.fLLRangeSlow;
+            float nPolModState1 = UIData.nLLRoundingFast;
+            float nPolModState2 = UIData.nLLRoundingSlow;
+
+            int nPolarizationStates = 2;
+            int nUltrasoundStates = 2;
+            int nLinesPerPosition;
+            int nNumberPositions; 
+
+
+            bool bAltFrame = false;     // alternating frame mode: frame 1 US-OCE, frame 2 PS-OCT
+
+            if (bAltFrame == false)
+                nLinesPerPosition = 2 * nPolarizationStates + nUltrasoundStates;
+            else
+                nLinesPerPosition = 2 * nPolarizationStates;
+
+            nNumberPositions = nNumberLines / nLinesPerPosition;
+
+
+#if (TRUEDAQ)
+            // counter task
+            Task taskCtr = new Task();
+            taskCtr.DIChannels.CreateChannel("Dev1/PFI0", "ctrClock", ChannelLineGrouping.OneChannelForEachLine);
+            //taskCtr.CIChannels.CreatePulseChannelFrequency("/Dev1/PFI7", "", 0.0, 5.0, CIPulseFrequencyUnits.Hertz);
+            //taskCtr.COChannels.CreatePulseChannelFrequency("Dev1/ctr0", "ctrClock", COPulseFrequencyUnits.Hertz, COPulseIdleState.Low, 0.0, 2 * dLineTriggerRate, 0.5);
+            //taskCtr.Timing.ConfigureImplicit(SampleQuantityMode.ContinuousSamples, 1000);
+
+            /* Begin: 20220523 editing by JL: add auxiliary trigger line */
+
+            // digital task
+            Task taskDig = new Task();
+            DigitalMultiChannelWriter digWriter = new DigitalMultiChannelWriter(taskDig.Stream);
+            taskDig.DOChannels.CreateChannel("Dev1/port0/line0", "digLineTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            taskDig.DOChannels.CreateChannel("Dev1/port0/line1", "digFrameTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            taskDig.DOChannels.CreateChannel("Dev1/port0/line2", "digVolumeTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            taskDig.DOChannels.CreateChannel("Dev1/port0/line3", "digAuxiliaryTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            taskDig.DOChannels.CreateChannel("Dev1/port0/line4", "digAnaWaveformTrigger", ChannelLineGrouping.OneChannelForAllLines); 
+            taskDig.Timing.ConfigureSampleClock("/Dev1/PFI0", 2 * dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
+            //taskDig.Triggers.StartTrigger.ConfigureDigitalEdgeTrigger("/Dev1/PFI2", DigitalEdgeStartTriggerEdge.Rising); 
+            //taskDig.Triggers.StartTrigger.ConfigureAnalogEdgeTrigger("/Dev1/ai0", AnalogEdgeStartTriggerSlope.Rising, 1.0); 
+            taskDig.Control(TaskAction.Verify);
+
+            DigitalWaveform[] digWFM;
+            digWFM = new DigitalWaveform[5];
+            // line trigger
+            int i = 0, j, k, l;
+            digWFM[i] = new DigitalWaveform(nNumberFrames * nNumberLines, 1);
+            for (j = 0; j < nNumberFrames; j++)
+            {
+                for (k = 0; k < nNumberLines; k += 2)
+                {
+                    digWFM[i].Signals[0].States[j * nNumberLines + k] = DigitalState.ForceUp; // j * 2 * nNumberLines
+                    digWFM[i].Signals[0].States[j * nNumberLines + k + 1] = DigitalState.ForceDown;
+                }
+            }
+            // frame trigger
+            i = 1;
+            digWFM[i] = new DigitalWaveform(nNumberFrames * nNumberLines, 1);
+            for (j = 0; j < nNumberFrames; j++)
+            {
+                k = 0;
+                digWFM[i].Signals[0].States[j * nNumberLines + k] = DigitalState.ForceUp;
+                for (k = 1; k < nNumberLines; k++)
+                    digWFM[i].Signals[0].States[j * nNumberLines + k] = DigitalState.ForceDown;
+            }
+
+            // volume trigger
+            i = 2;
+            digWFM[i] = new DigitalWaveform(nNumberFrames * nNumberLines, 1);
+            for (j = 0; j < nNumberFrames; j++)
+                for (k = 1; k < nNumberLines; k++)
+                    digWFM[i].Signals[0].States[j * nNumberLines + k] = DigitalState.ForceDown;
+            digWFM[i].Signals[0].States[0] = DigitalState.ForceUp;
+
+            // auxiliary trigger
+            i = 3;
+            digWFM[i] = new DigitalWaveform(nNumberFrames * nNumberLines, 1);
+            if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
+            {
+                for (j = 0; j < nNumberFrames; j++)
+                {
+                    for (k = 0; k < nNumberLines; k++)
+                    {
+                        if (k % 6 == 5) // US is sent on the 6th line of each 6 line group
+                            digWFM[i].Signals[0].States[j * nNumberLines + k] = DigitalState.ForceUp;
+                        else
+                            digWFM[i].Signals[0].States[j * nNumberLines + k] = DigitalState.ForceDown;
+
+                    }
+                }
+
+            }
+            else // alter frames: PS and OCE on alternating frames 
+            {
+                for (j = 0; j < nNumberFrames; j++)
+                {
+                    if (j % 2 == 0) // US is sent on odd frames 
+                    {
+                        for (k = 0; k < nNumberLines; k++)
+                        {
+                            if (k % 2 == 0)
+                                digWFM[i].Signals[0].States[j * nNumberLines + k] = DigitalState.ForceUp;
+                            else
+                                digWFM[i].Signals[0].States[j * nNumberLines + k] = DigitalState.ForceDown;
+
+                        }
+                    }
+                    else // no US on even frames 
+                    {
+                        for (k = 0; k < nNumberLines; k++)
+                            digWFM[i].Signals[0].States[j * nNumberLines + k] = DigitalState.ForceDown;
+                    }
+
+                }
+
+            }
+
+            // analog waveform trigger 
+            i = 4;
+            digWFM[i] = new DigitalWaveform(nNumberFrames * nNumberLines, 1);
+            for (j = 0; j < nNumberFrames; j++)
+            {                
+                for (k = 0; k < nNumberLines - 1; k++)
+                    digWFM[i].Signals[0].States[j * nNumberLines + k] = DigitalState.ForceDown;
+
+                k = nNumberLines - 1;
+                digWFM[i].Signals[0].States[j * nNumberLines + k] = DigitalState.ForceUp;
+            }
+
+            // write waveform
+            digWriter.WriteWaveform(false, digWFM);
+
+            /* End: 20220523 editing by JL: add auxiliary trigger line */
+
+
+            //// digital task
+            //Task taskDig = new Task();
+            //DigitalMultiChannelWriter digWriter = new DigitalMultiChannelWriter(taskDig.Stream);
+            //taskDig.DOChannels.CreateChannel("Dev1/port0/line0", "digLineTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            //taskDig.DOChannels.CreateChannel("Dev1/port0/line1", "digFrameTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            //taskDig.DOChannels.CreateChannel("Dev1/port0/line2", "digVolumeTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            ////taskDig.Timing.ConfigureSampleClock("/Dev1/Ctr0InternalOutput", 2 * dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
+            //taskDig.Timing.ConfigureSampleClock("/Dev1/PFI0", dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
+            //taskDig.Control(TaskAction.Verify);
+
+            //DigitalWaveform[] digWFM;
+            //digWFM = new DigitalWaveform[3];
+            //// line trigger
+            //int i = 0, j, k, l;
+            //digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
+            //for (j = 0; j < nNumberFrames; j++)
+            //{
+            //    for (k = 0; k < 2 * nNumberLines; k += 2)
+            //    {
+            //        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown; // j * 2 * nNumberLines
+            //        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k + 1] = DigitalState.ForceUp;
+            //    }
+            //}
+            //// frame trigger
+            //i = 1;
+            //digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
+            //for (j = 0; j < nNumberFrames; j++)
+            //{
+            //    k = 0;
+            //    digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceUp;
+            //    for (k = 1; k < 2 * nNumberLines; k++)
+            //        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown;
+            //}
+
+            //// volume trigger
+            //i = 2;
+            //digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
+            //for (j = 0; j < nNumberFrames; j++)
+            //    for (k = 1; k < 2 * nNumberLines; k++)
+            //        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown;
+            //digWFM[i].Signals[0].States[0] = DigitalState.ForceUp;
+            //// write waveform
+            //digWriter.WriteWaveform(false, digWFM);
+
+
+            // analog waveform
+            Task taskAna = new Task();
+            AnalogMultiChannelWriter anaWriter = new AnalogMultiChannelWriter(taskAna.Stream);
+            taskAna.AOChannels.CreateVoltageChannel("Dev1/ao0", "anaGalvoFast", -5.0, +5.0, AOVoltageUnits.Volts);
+            taskAna.AOChannels.CreateVoltageChannel("Dev1/ao1", "anaGalvoSlow", -5.0, +5.0, AOVoltageUnits.Volts);
+            taskAna.AOChannels.CreateVoltageChannel("Dev1/ao2", "anaPolMod", -10.0, +10.0, AOVoltageUnits.Volts);
+            taskAna.Timing.ConfigureSampleClock("/Dev1/PFI0", dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
+            taskAna.Triggers.StartTrigger.ConfigureDigitalEdgeTrigger("/Dev1/PFI1", DigitalEdgeStartTriggerEdge.Rising); 
+            //taskAna.Triggers.StartTrigger.ConfigureAnalogEdgeTrigger("/Dev1/ai0", AnalogEdgeStartTriggerSlope.Rising, 1.0); 
+
+
+            double[,] anaWFM = new double[3, nNumberFrames * nNumberLines];
+            // fast galvo
+            i = 0;
+            for (j = 0; j < nNumberFrames; j++)
+            {
+                for (k = 0; k < nNumberPositions; k++)
+                {
+                    for (l = 0; l < nLinesPerPosition; l++)
+                    {
+                        // anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberPositions;
+                        if (l % nLinesPerPosition == 0)
+                        {
+                            anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = 1.0;
+                        }
+                        else
+                        {
+                            anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = 0.0;
+                        }
+                    }
+                        
+                    
+                            
+
+                }
+            }
+            
+            //for (j = 0; j < nNumberFrames; j++)
+            //{
+            //    for (k = 0; k < nNumberLinesPerState; k++)
+            //    {
+            //        for (l = 0; l < 4; l++)
+            //        {
+            //            anaWFM[i, j * nNumberLines + 4 * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberLinesPerState;
+            //        }
+            //    }
+            //}
+
+
+            // slow galvo
+            i = 1;
+            if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
+            {
+                for (j = 0; j < nNumberFrames; j++)
+                {
+                    for (k = 0; k < nNumberLines; k++)
+                    {
+                        anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
+                    }
+                }
+            }
+            else // alter frames: PS and OCE on alternating frames 
+            {
+                for (j = 0; j < nNumberFrames; j++)
+                {
+                    if (j % 2 == 0) // US is sent on odd frames 
+                    {
+                        for (k = 0; k < nNumberLines; k++)
+                        {
+                            anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
+                        }
+                    }
+                    else // no US on even frames 
+                    {
+                        for (k = 0; k < nNumberLines; k++)
+                        {
+                            anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * (j - 1) / nNumberFrames;
+                        }
+                    }
+                }
+            }
+
+            //for (j = 0; j < nNumberFrames; j++)
+            //{
+            //    for (k = 0; k < nNumberLines; k++)
+            //    {
+            //        anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
+            //    }
+            //}
+
+
+            // pol mod
+            i = 2;
+            if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
+            {
+                for (j = 0; j < nNumberFrames; j++)
+                {
+                    for (k = 0; k < nNumberLines; k += nLinesPerPosition)
+                    {
+                        anaWFM[i, j * nNumberLines + k + 0] = nPolModState2;
+                        anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
+                        anaWFM[i, j * nNumberLines + k + 2] = nPolModState1;
+                        anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
+                        anaWFM[i, j * nNumberLines + k + 4] = nPolModState2;
+                        anaWFM[i, j * nNumberLines + k + 5] = nPolModState2;
+                    }
+                }
+            }
+            else // alter frames: PS and OCE on alternating frames 
+            {
+                for (j = 0; j < nNumberFrames; j++)
+                {
+                    if (j % 2 == 0) // US is sent on odd frames 
+                    {
+                        for (k = 0; k < nNumberLines; k++)
+                        {
+                            anaWFM[i, j * nNumberLines + k] = nPolModState2;
+                        }
+                    }
+                    else // no US on even frames 
+                    {
+                        for (k = 0; k < nNumberLines; k += nLinesPerPosition)
+                        {
+                            anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
+                            anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
+                            anaWFM[i, j * nNumberLines + k + 2] = nPolModState2;
+                            anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
+                        }
+                    }
+                }
+            }
+            //for (j = 0; j < nNumberFrames; j++)
+            //{
+            //    for (k = 0; k < nNumberLines; k += 4)
+            //    {
+            //        anaWFM[i, j * nNumberLines + k] = nPolModState1;
+            //        anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
+            //        anaWFM[i, j * nNumberLines + k + 2] = nPolModState2;
+            //        anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
+            //    }
+            //}
+
+
+            anaWriter.WriteMultiSample(false, anaWFM);
+#endif
+
+            // set up wait handles to start
+            WaitHandle[] pweStart = new WaitHandle[2];
+            pweStart[0] = threadData.mreOutputKill;
+            pweStart[1] = threadData.mreOutputRun;
+            // set up wait handles for main loop
+            WaitHandle[] pweLoop = new WaitHandle[2];
+            pweLoop[0] = threadData.mreOutputKill;
+            pweLoop[1] = threadData.mreOutputUpdate;
+
+            // initialization complete
+            threadData.mreOutputReady.Set();
+            threadData.strOutputThreadStatus = "Ready!";
+            #endregion
+
+            #region main loop
+            threadData.strOutputThreadStatus = "Set...";
+            if (WaitHandle.WaitAny(pweStart) == 1)
+            {
+                threadData.strOutputThreadStatus = "GO!";
+                // wait for camera sync event 
+                threadData.mreCameraSync.WaitOne();
+
+                // let the thread sleep for 1 ms
+                Thread.Sleep(1);
+
+#if (TRUEDAQ)
+                // start tasks
+                //taskCtr.Start();
+                taskDig.Control(TaskAction.Start);
+                taskAna.Control(TaskAction.Start);
+#endif
+
+                while (WaitHandle.WaitAny(pweLoop) == 1)
+                {
+                    threadData.mreOutputUpdate.Reset();
+                    threadData.strOutputThreadStatus = "updating...";
+
+#if (TRUEDAQ)
+                    // fast galvo
+                    i = 0;
+                    for (j = 0; j < nNumberFrames; j++)
+                    {
+                        for (k = 0; k < nNumberPositions; k++)
+                        {
+                            for (l = 0; l < nLinesPerPosition; l++)
+                            {
+                                // anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberPositions;
+                                if (l % nLinesPerPosition == 0)
+                                {
+                                    anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = 1.0;
+                                }
+                                else
+                                {
+                                    anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = 0.0;
+                                }
+                            }
+                        }
+                    }
+
+                    // slow galvo
+                    i = 1;
+                    if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
+                    {
+                        for (j = 0; j < nNumberFrames; j++)
+                        {
+                            for (k = 0; k < nNumberLines; k++)
+                            {
+                                anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
+                            }
+                        }
+                    }
+                    else // alter frames: PS and OCE on alternating frames 
+                    {
+                        for (j = 0; j < nNumberFrames; j++)
+                        {
+                            if (j % 2 == 0) // US is sent on odd frames 
+                            {
+                                for (k = 0; k < nNumberLines; k++)
+                                {
+                                    anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
+                                }
+                            }
+                            else // no US on even frames 
+                            {
+                                for (k = 0; k < nNumberLines; k++)
+                                {
+                                    anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * (j - 1) / nNumberFrames;
+                                }
+                            }
+                        }
+                    }
+
+                    // pol mod
+                    i = 2;
+                    if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
+                    {
+                        for (j = 0; j < nNumberFrames; j++)
+                        {
+                            for (k = 0; k < nNumberLines; k += nLinesPerPosition)
+                            {
+                                anaWFM[i, j * nNumberLines + k + 0] = nPolModState2;
+                                anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
+                                anaWFM[i, j * nNumberLines + k + 2] = nPolModState1;
+                                anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
+                                anaWFM[i, j * nNumberLines + k + 4] = nPolModState2;
+                                anaWFM[i, j * nNumberLines + k + 5] = nPolModState2;
+                            }
+                        }
+                    }
+                    else // alter frames: PS and OCE on alternating frames 
+                    {
+                        for (j = 0; j < nNumberFrames; j++)
+                        {
+                            if (j % 2 == 0) // US is sent on odd frames 
+                            {
+                                for (k = 0; k < nNumberLines; k++)
+                                {
+                                    anaWFM[i, j * nNumberLines + k] = nPolModState2;
+                                }
+                            }
+                            else // no US on even frames 
+                            {
+                                for (k = 0; k < nNumberLines; k += nLinesPerPosition)
+                                {
+                                    anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
+                                    anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
+                                    anaWFM[i, j * nNumberLines + k + 2] = nPolModState2;
+                                    anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
+                                }
+                            }
+                        }
+                    }
+
+                    anaWriter.BeginWriteMultiSample(false, anaWFM, null, null);
+#endif
+
+                    threadData.strOutputThreadStatus = "idle...";
+                }
+            }
+            #endregion
+
+            #region cleanup
+            threadData.strOutputThreadStatus = "Cleaning up...";
+
+#if (TRUEDAQ)
+            // clean up code
+            taskAna.Control(TaskAction.Stop);
+            taskDig.Control(TaskAction.Stop);
+            //taskCtr.Stop();
+
+            taskAna.Dispose();
+            taskDig.Dispose();
+            //taskCtr.Dispose();
+#endif
+
+            threadData.mreOutputDead.Set();
+            threadData.strOutputThreadStatus = "Done.";
+            #endregion
+
+        }

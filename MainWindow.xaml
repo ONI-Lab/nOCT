@@ -253,7 +253,7 @@
 
             <CheckBox Grid.Column="0" Grid.Row="2" Name="chkULLeftActive" HorizontalAlignment="Right" VerticalAlignment="Bottom" IsChecked="{Binding bULLeftActive}" />
             <TextBox Grid.Row="2" Grid.Column="1" Height="20" Width="50" HorizontalAlignment="Left" VerticalAlignment="Bottom" Name="txtULIMAQLeft" Text="{Binding nULLeft}" />
-            <ni:Graph Grid.Column="1" Name="graphULLeft" RenderMode="Raster" Grid.ColumnSpan="3" Margin="-90,120,590,115" Grid.Row="3" >
+            <ni:Graph Name="graphULLeft" RenderMode="Raster" Grid.ColumnSpan="4" Margin="-43,57,575,80.667" Grid.Row="3" >
                 <ni:Graph.RenderTransform>
                     <RotateTransform Angle="90"/>
                 </ni:Graph.RenderTransform>
@@ -261,8 +261,8 @@
                     <Point X="0.5" Y="0.5" />
                 </ni:Graph.RenderTransformOrigin>
                 <ni:Graph.Axes>
-                    <ni:AxisInt32 Orientation="Horizontal" MajorGridLines="{x:Null}" Visibility="Collapsed" Adjuster="None" Name="axisULLeftHorizontal" />
-                    <ni:AxisSingle Orientation="Vertical" MajorGridLines="{x:Null}" Visibility="Collapsed" Adjuster="None" Name="axisULLeftVertical" />
+                    <ni:AxisInt32 Orientation="Horizontal" Adjuster="None" Name="axisULLeftHorizontal" />
+                    <ni:AxisSingle Orientation="Vertical" Adjuster="None" Name="axisULLeftVertical" />
                 </ni:Graph.Axes>
             </ni:Graph>
 
@@ -284,10 +284,10 @@
                     <ni:Cursor Name="cursorULMain" LabelVisibility="Collapsed" CrosshairBrush="Yellow" />
                 </ni:IntensityGraph.Children>
                 <ni:IntensityGraph.VerticalAxis>
-                    <ni:AxisSingle IsInverted="True" MajorGridLines="{x:Null}" Visibility="Collapsed" Name="axisULMainVertical" Adjuster="None" />
+                    <ni:AxisSingle IsInverted="True" MajorGridLines="{x:Null}" Name="axisULMainVertical" Adjuster="None" />
                 </ni:IntensityGraph.VerticalAxis >
                 <ni:IntensityGraph.HorizontalAxis>
-                    <ni:AxisSingle Name="axisULMainHorizontal" MajorGridLines="{x:Null}" Visibility="Collapsed" Adjuster="None" />
+                    <ni:AxisSingle Name="axisULMainHorizontal" MajorGridLines="{x:Null}" Adjuster="None" />
                 </ni:IntensityGraph.HorizontalAxis>
                 <ni:IntensityGraph.ColorScale>
                     <ni:ColorScaleSingle Name="csULMain" Adjuster="None" Location ="None" LowColor="Blue" HighColor="Red" >
@@ -343,10 +343,10 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="14" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Row="0" Grid.Column="0">int</TextBlock>
+                                <TextBlock x:Name="tbIntensityTag" Grid.Row="0" Grid.Column="0">int</TextBlock>
                             </Grid>
                         </TabItem.Header>
-                        <Grid Background="DodgerBlue">
+                        <Grid x:Name="gridIntensityPanel" Background="DodgerBlue" Width="245" Height="200" Margin="0" HorizontalAlignment="Center">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="5" />
                                 <RowDefinition Height="20" />
@@ -358,7 +358,7 @@
                                 <RowDefinition Height="20" />
                                 <RowDefinition Height="5" />
                                 <RowDefinition Height="20" />
-                                <RowDefinition Height="5" />
+                                <RowDefinition Height="20" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="5" />
@@ -371,30 +371,42 @@
                                 <ColumnDefinition Width="1*" />
                                 <ColumnDefinition Width="5" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="6">reference subtraction</TextBlock>
-                            <TextBlock Grid.Row="1" Grid.Column="7">depth</TextBlock>
-                            <TextBox Grid.Row="2" Grid.Column="7" Name="txtURIntensityTop" Text="{Binding nURIntensityTop}" />
-                            <TextBlock Grid.Row="9" Grid.Column="1">line</TextBlock>
-                            <TextBox Grid.Row="9" Grid.Column="2" Name="txtURIntensityLeft" Text="{Binding nURIntensityLeft}" HorizontalAlignment="Right" Width="43" />
-                            <TextBlock Grid.Row="9" Grid.Column="5">CUDA</TextBlock>
-                            <TextBox Grid.Row="9" Grid.Column="7" Name="txtURIntensityCUDA" Text="{Binding nURIntensityCUDA}" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="5" FontWeight="Bold" FontSize="14">intensity</TextBlock>
+                            <TextBlock Grid.Row="1" Grid.Column="5" HorizontalAlignment="Right" VerticalAlignment="Center">depth</TextBlock>
+                            <TextBox Grid.Row="1" Grid.Column="7" Name="txtURIntensityTop" Text="{Binding nURIntensityTop}" />
+
+                            <CheckBox Grid.Row="2" Grid.Column="1"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment="Center" Name="chkIntensitySurface" IsChecked="{Binding bURIntensitySurface}">display surface</CheckBox>
+                            <CheckBox Grid.Row="3" Grid.Column="1"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment="Center" Name="chkIntensityEnFace" IsChecked="{Binding bURIntensityEnFace}">display en face</CheckBox>
+                            <TextBlock Grid.Row="3" Grid.Column="4" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,3,0">range</TextBlock>
+                            <TextBox Grid.Row="3" Grid.Column="5" Name="txtURIntensityEnFaceUp" Text="{Binding nURIntensityEnFaceUp}" />
+                            <TextBox Grid.Row="3" Grid.Column="7" Name="txtURIntensityEnFaceLow" Text="{Binding nURIntensityEnFaceLow}" />
+
+                            <TextBlock Grid.Row="9" Grid.Column="1" Text="A-line"/>
+                            <TextBox Grid.Row="9" Grid.Column="2" Name="txtURIntensityALine1" Text="{Binding nURIntensityAline1}" />
+                            <TextBox Grid.Row="9" Grid.Column="4" Name="txtURIntensityALine2" Text="{Binding nURIntensityAline2}" />
+                            <Button Grid.Row="9" Grid.Column="6" Grid.ColumnSpan="2" Name="btnURIntensityApply" Click="btnURIntensityApply_Click">apply</Button>
+                            <TextBlock Grid.Row="7" Grid.Column="5">CUDA</TextBlock>
+                            <TextBox Grid.Row="7" Grid.Column="7" Name="txtURIntensityCUDA" Text="{Binding nURIntensityCUDA}" />
                         </Grid>
                     </TabItem>
+
+
 
                     <!-- attenuation -->
                     <TabItem>
                         <TabItem.Header>
                             <Grid>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="15" />
+                                    <RowDefinition Height="13" />
+                                    <RowDefinition Height="2"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="14" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Row="0" Grid.Column="0">att</TextBlock>
+                                <TextBlock x:Name="tbAttenuationTag" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2">att</TextBlock>
                             </Grid>
                         </TabItem.Header>
-                        <Grid Background="DodgerBlue">
+                        <Grid x:Name="gridAttenuationPanel" Background="DodgerBlue" Width="245" Height="200">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="5" />
                                 <RowDefinition Height="20" />
@@ -406,7 +418,7 @@
                                 <RowDefinition Height="20" />
                                 <RowDefinition Height="5" />
                                 <RowDefinition Height="20" />
-                                <RowDefinition Height="5" />
+                                <RowDefinition Height="20" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="5" />
@@ -419,17 +431,28 @@
                                 <ColumnDefinition Width="1*" />
                                 <ColumnDefinition Width="5" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="6">reference subtraction</TextBlock>
-                            <ComboBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4">
-                                <ComboBoxItem>none</ComboBoxItem>
-                                <ComboBoxItem>average</ComboBoxItem>
-                                <ComboBoxItem>record</ComboBoxItem>
-                                <ComboBoxItem>use recorded</ComboBoxItem>
-                            </ComboBox>
-                            <TextBlock Grid.Row="1" Grid.Column="7">depth</TextBlock>
-                            <TextBox Grid.Row="2" Grid.Column="7" />
-                            <TextBlock Grid.Row="9" Grid.Column="1">line</TextBlock>
-                            <TextBox Grid.Row="9" Grid.Column="2" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="12" FontWeight="Bold" FontSize="14">attenuation</TextBlock>
+                            <TextBlock Grid.Row="1" Grid.Column="5" HorizontalAlignment="Right" VerticalAlignment="Center">depth</TextBlock>
+                            <TextBox Grid.Row="1" Grid.Column="7" Name="txtURAttenuationTop" Text="{Binding nURAttenuationTop}" />
+
+                            <CheckBox Grid.Row="2" Grid.Column="1"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment="Center" Name="chkAttenuationSurface" IsChecked="{Binding bURAttenuationSurface}" >display surface</CheckBox>
+                            <CheckBox Grid.Row="3" Grid.Column="1"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment="Center" Name="chkAttenuationEnFace" IsChecked="{Binding bURAttenuationEnFace}" >display en face</CheckBox>
+                            <TextBlock Grid.Row="3" Grid.Column="4" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,3,0">range</TextBlock>
+                            <TextBox Grid.Row="3" Grid.Column="5" Name="txtURAttenuationEnFaceUp" Text="{Binding nURAttenuationEnFaceUp}" />
+                            <TextBox Grid.Row="3" Grid.Column="7" Name="txtURAttenuationEnFaceLow" Text="{Binding nURAttenuationEnFaceLow}" />
+
+                            <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Center" >phy. depth (um)</TextBlock>
+                            <TextBox Grid.Row="5" Grid.Column="4" Name="txtURAttenuationDepthInMicrons" Text="{Binding dURAttenuationDepthInMicrons}" />
+                            <TextBlock Grid.Row="5" Grid.Column="5" Grid.ColumnSpan="2" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,3,0" >px depth</TextBlock>
+                            <TextBox Grid.Row="5" Grid.Column="7" Name="txtblkURAttenuationPixelDepth" Text="{Binding dURAttenuationPixelDepth}" IsReadOnly="True"/>
+                            <TextBlock Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="9" HorizontalAlignment="Left" VerticalAlignment="Center" >reference loaded?</TextBlock>
+                            <CheckBox Grid.Row="6" Grid.Column="4"  HorizontalAlignment="Center" VerticalAlignment="Center" Name="chkAttenuationReferenceLoaded" IsChecked="{Binding bURAttenuationReferenceLoaded}" Margin="0,3,0,2" />
+                            <TextBlock Grid.Row="6" Grid.Column="5" Grid.ColumnSpan="2" HorizontalAlignment="Right" VerticalAlignment="Center" >noise (dB)</TextBlock>
+                            <TextBox Grid.Row="6" Grid.Column="7" Name="txtURAttenuationNoiseLevel" Text="{Binding dURAttenuationNoiseLevel}" />
+
+                            <TextBlock Grid.Row="9" Grid.Column="1" Text="A-line"/>
+                            <TextBox Grid.Row="9" Grid.Column="2" Name="txtURAttenuationALine1" Text="{Binding nURAttenuationAline1}" />
+                            <TextBox Grid.Row="9" Grid.Column="4" Name="txtURAttenuationALine2" Text="{Binding nURAttenuationAline2}" />
                         </Grid>
                     </TabItem>
 
@@ -438,15 +461,16 @@
                         <TabItem.Header>
                             <Grid>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="15" />
+                                    <RowDefinition Height="5" />
+                                    <RowDefinition Height="10"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="14" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Row="0" Grid.Column="0">ph</TextBlock>
+                                <TextBlock x:Name="tbPhaseTag" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2">ph</TextBlock>
                             </Grid>
                         </TabItem.Header>
-                        <Grid Background="DodgerBlue">
+                        <Grid x:Name="gridPhasePanel" Background="DodgerBlue" Width="245" Height="200">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="5" />
                                 <RowDefinition Height="20" />
@@ -458,7 +482,7 @@
                                 <RowDefinition Height="20" />
                                 <RowDefinition Height="5" />
                                 <RowDefinition Height="20" />
-                                <RowDefinition Height="5" />
+                                <RowDefinition Height="20" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="5" />
@@ -471,19 +495,20 @@
                                 <ColumnDefinition Width="1*" />
                                 <ColumnDefinition Width="5" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="6">reference subtraction</TextBlock>
-                            <ComboBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4">
-                                <ComboBoxItem>none</ComboBoxItem>
-                                <ComboBoxItem>average</ComboBoxItem>
-                                <ComboBoxItem>record</ComboBoxItem>
-                                <ComboBoxItem>use recorded</ComboBoxItem>
-                            </ComboBox>
-                            <TextBlock Grid.Row="1" Grid.Column="7">depth</TextBlock>
-                            <TextBox Grid.Row="2" Grid.Column="7" />
-                            <TextBlock Grid.Row="9" Grid.Column="1">line</TextBlock>
-                            <TextBox Grid.Row="9" Grid.Column="2" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" FontWeight="Bold" FontSize="14">phase</TextBlock>
+                            <CheckBox Grid.Row="2" Grid.Column="1"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment="Center" Name="chkPhaseSurface" IsChecked="{Binding bURPhaseSurface}" >display surface</CheckBox>
+
+                            <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="4" HorizontalAlignment="Left" VerticalAlignment="Center">reference line depth</TextBlock>
+                            <TextBox Grid.Row="3" Grid.Column="5" Name="txtURPhaseReferenceLine" Text="{Binding dURPhaseReferenceLine}" />
+                            <TextBlock Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="4" HorizontalAlignment="Left" VerticalAlignment="Center">measurement line depth</TextBlock>
+                            <TextBox Grid.Row="4" Grid.Column="5" Name="txtURPhaseMeasurementLine" Text="{Binding dURPhaseMeasurementLine}" />
+                            <TextBlock Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="4" TextDecorations="Underline">graph display mode</TextBlock>
+                            <RadioButton Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="3" GroupName="rbPhaseLeftDisplayMode" IsChecked="True">depth profile</RadioButton>
+                            <RadioButton Grid.Row="7" Grid.Column="4" Grid.ColumnSpan="9" GroupName="rbPhaseLeftDisplayMode">mea. vs exp. phase var</RadioButton>
+
                         </Grid>
                     </TabItem>
+
 
                     <!-- polarization -->
                     <TabItem>
@@ -495,10 +520,10 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="16" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Row="0" Grid.Column="0">pol</TextBlock>
+                                <TextBlock x:Name="tbPolarizationTag" Grid.Row="0" Grid.Column="0">pol</TextBlock>
                             </Grid>
                         </TabItem.Header>
-                        <Grid Background="DodgerBlue">
+                        <Grid x:Name="gridPolarizationPanel" Background="DodgerBlue" Width="245" Height="200">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="5" />
                                 <RowDefinition Height="20" />
@@ -523,17 +548,26 @@
                                 <ColumnDefinition Width="1*" />
                                 <ColumnDefinition Width="5" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="6">reference subtraction</TextBlock>
-                            <ComboBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4">
-                                <ComboBoxItem>none</ComboBoxItem>
-                                <ComboBoxItem>average</ComboBoxItem>
-                                <ComboBoxItem>record</ComboBoxItem>
-                                <ComboBoxItem>use recorded</ComboBoxItem>
-                            </ComboBox>
-                            <TextBlock Grid.Row="1" Grid.Column="7">depth</TextBlock>
-                            <TextBox Grid.Row="2" Grid.Column="7" />
-                            <TextBlock Grid.Row="9" Grid.Column="1">line</TextBlock>
-                            <TextBox Grid.Row="9" Grid.Column="2" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" FontWeight="Bold" FontSize="14">polarization</TextBlock>
+                            <TextBlock Grid.Row="1" Grid.Column="5" HorizontalAlignment="Right" VerticalAlignment="Center">depth</TextBlock>
+                            <TextBox Grid.Row="1" Grid.Column="7" Name="txtURPolarizationTop" Text="{Binding nURPolarizationTop}" />
+
+                            <CheckBox Grid.Row="2" Grid.Column="1"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment="Center" Name="chkPolarizationSurface" IsChecked="{Binding bURPolarizationSurface}" >display surface</CheckBox>
+
+                            <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" >ps linear fitting:</TextBlock>
+                            <TextBlock Grid.Row="3" Grid.Column="3" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="0,0,3,0" >top</TextBlock>
+                            <TextBlock Grid.Row="4" Grid.Column="3" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="0,0,3,0" >bottom</TextBlock>
+                            <TextBox Grid.Row="3" Grid.Column="5" Name="txtURPolarizationFittingTop" Text="{Binding dURPolarizationPMVoltageLow}" />
+                            <TextBox Grid.Row="4" Grid.Column="5" Name="txtURPolarizationFittingBottom" Text="{Binding dURPolarizationPMVoltageHigh}" />
+
+                            <TextBlock Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" TextDecorations="Underline" FontStyle="Italic" >DAQ output</TextBlock>
+                            <TextBlock Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="4" HorizontalAlignment="Left" >PM voltages</TextBlock>
+                            <TextBox Grid.Row="7" Grid.Column="4" Name="txtURPolarizationPMVoltageLow" Text="{Binding dURPolarizationPMVoltageLow}" />
+                            <TextBox Grid.Row="7" Grid.Column="5" Name="txtURPolarizationPMVoltageHigh" Text="{Binding dURPolarizationPMVoltageHigh}" />
+
+                            <TextBlock Grid.Row="9" Grid.Column="1" Text="A-line"/>
+                            <TextBox Grid.Row="9" Grid.Column="2" Name="txtURPolarizationALine1" Text="{Binding nURPolarizationAline1}" />
+                            <TextBox Grid.Row="9" Grid.Column="4" Name="txtURPolarizationALine2" Text="{Binding nURPolarizationAline2}" />
                         </Grid>
                     </TabItem>
 
@@ -547,10 +581,10 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="20" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Row="0" Grid.Column="0">ang</TextBlock>
+                                <TextBlock x:Name="tbAngiographyTag" Grid.Row="0" Grid.Column="0">ang</TextBlock>
                             </Grid>
                         </TabItem.Header>
-                        <Grid Background="DodgerBlue">
+                        <Grid x:Name="gridAngiographyPanel" Background="DodgerBlue" Width="245" Height="200">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="5" />
                                 <RowDefinition Height="20" />
@@ -575,17 +609,29 @@
                                 <ColumnDefinition Width="1*" />
                                 <ColumnDefinition Width="5" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="6">reference subtraction</TextBlock>
-                            <ComboBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4">
-                                <ComboBoxItem>none</ComboBoxItem>
-                                <ComboBoxItem>average</ComboBoxItem>
-                                <ComboBoxItem>record</ComboBoxItem>
-                                <ComboBoxItem>use recorded</ComboBoxItem>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" FontWeight="Bold" FontSize="14">angiography</TextBlock>
+
+
+                            <CheckBox Grid.Row="2" Grid.Column="1"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment="Center" Name="chkAngiographySurface" IsChecked="{Binding bURAngiographySurface}" >display surface</CheckBox>
+                            <CheckBox Grid.Row="3" Grid.Column="1"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment="Center" Name="chkAngiographyEnFace" IsChecked="{Binding bURAngiographyEnFace}" >display en face</CheckBox>
+                            <TextBlock Grid.Row="3" Grid.Column="4" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,3,0">range</TextBlock>
+                            <TextBox Grid.Row="3" Grid.Column="5" Name="txtURAngiographyEnFaceUp" Text="{Binding nURAngiographyEnFaceUp}" />
+                            <TextBox Grid.Row="3" Grid.Column="7" Name="txtURAngiographyEnFaceLow" Text="{Binding nURAngiographyEnFaceLow}" />
+
+                            <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="4" HorizontalAlignment="Left" VerticalAlignment="Center">num. of lines apart for var</TextBlock>
+                            <TextBox Grid.Row="5" Grid.Column="5" Name="txtURAngiographyLinesApart" Text="{Binding nURAngiographyLinesApart}" />
+
+                            <TextBlock Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" TextDecorations="Underline" FontStyle="Italic" >DAQ output</TextBlock>
+                            <TextBlock Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="4" VerticalAlignment="Center" >lines per position</TextBlock>
+                            <ComboBox Grid.Row="7" Grid.Column="4" Name="cbURAngiographyLinesPerPosition" IsEditable="True" SelectedIndex="{Binding nURAngiographyLinesPerPosition}">
+                                <ComboBoxItem IsSelected="True">1</ComboBoxItem>
+                                <ComboBoxItem>2</ComboBoxItem>
+                                <ComboBoxItem>4</ComboBoxItem>
+                                <ComboBoxItem>8</ComboBoxItem>
+                                <ComboBoxItem>16</ComboBoxItem>
                             </ComboBox>
-                            <TextBlock Grid.Row="1" Grid.Column="7">depth</TextBlock>
-                            <TextBox Grid.Row="2" Grid.Column="7" />
-                            <TextBlock Grid.Row="9" Grid.Column="1">line</TextBlock>
-                            <TextBox Grid.Row="9" Grid.Column="2" />
+
+
                         </Grid>
                     </TabItem>
 
@@ -627,17 +673,38 @@
                                 <ColumnDefinition Width="1*" />
                                 <ColumnDefinition Width="5" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="6">reference subtraction</TextBlock>
-                            <ComboBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4">
-                                <ComboBoxItem>none</ComboBoxItem>
-                                <ComboBoxItem>average</ComboBoxItem>
-                                <ComboBoxItem>record</ComboBoxItem>
-                                <ComboBoxItem>use recorded</ComboBoxItem>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" FontWeight="Bold" FontSize="14">elastography</TextBlock>
+                            <TextBlock Grid.Row="1" Grid.Column="5" HorizontalAlignment="Right" VerticalAlignment="Center">depth</TextBlock>
+                            <TextBox Grid.Row="1" Grid.Column="7" Name="txtUROCETop" Text="{Binding nUROCETop}" />
+
+                            <CheckBox Grid.Row="2" Grid.Column="1"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment="Center" Name="chkOCESurface" IsChecked="{Binding bUROCESurface}" >display surface</CheckBox>
+                            <CheckBox Grid.Row="3" Grid.Column="1"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment="Center" Name="chkOCEEnFace" IsChecked="{Binding bUROCEEnFace}" >display en face</CheckBox>
+                            <TextBlock Grid.Row="3" Grid.Column="4" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,3,0">range</TextBlock>
+                            <TextBox Grid.Row="3" Grid.Column="5" Name="txtUROCEEnFaceUp" Text="{Binding nUROCEEnFaceUp}" />
+                            <TextBox Grid.Row="3" Grid.Column="7" Name="txtUROCEEnFaceLow" Text="{Binding nUROCEEnFaceLow}" />
+
+                            <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="4" TextDecorations="Underline">graph display mode</TextBlock>
+
+                            <RadioButton Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" GroupName="rbUROCEDisplayMode" 
+                                         Checked="rbUROCEDisplayMode_Checked_Intensity">intensity:</RadioButton>
+                            <RadioButton Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="9" GroupName="rbUROCEDisplayMode" 
+                                         Checked="rbUROCEDisplayMode_Checked_OCE">OCE:</RadioButton>
+
+                            <ComboBox Grid.Row="6" Grid.Column="4" Grid.ColumnSpan="2" Name="cbURIntensityDisplayOptions" SelectedIndex="{Binding nUROCEIntensityDisplayIndex}" IsEnabled="False">
+                                <ComboBoxItem IsSelected="True">all lines</ComboBoxItem>
+                                <ComboBoxItem>even lines</ComboBoxItem>
+                                <ComboBoxItem>odd lines</ComboBoxItem>
                             </ComboBox>
-                            <TextBlock Grid.Row="1" Grid.Column="7">depth</TextBlock>
-                            <TextBox Grid.Row="2" Grid.Column="7" />
-                            <TextBlock Grid.Row="9" Grid.Column="1">line</TextBlock>
-                            <TextBox Grid.Row="9" Grid.Column="2" />
+
+                            <ComboBox Grid.Row="7" Grid.Column="4" Grid.ColumnSpan="2" Name="cbUROCEDisplayOptions" SelectedIndex="{Binding nUROCEOCEDisplayIndex}" IsEnabled="False">
+                                <ComboBoxItem >strain (um)</ComboBoxItem>
+                                <ComboBoxItem IsSelected="True">dB difference</ComboBoxItem>
+                            </ComboBox>
+
+
+                            <TextBlock Grid.Row="9" Grid.Column="1" Text="A-line"/>
+                            <TextBox Grid.Row="9" Grid.Column="2" Name="txtUROCEALine1" Text="{Binding nUROCEAline1}" />
+                            <TextBox Grid.Row="9" Grid.Column="4" Name="txtUROCEALine2" Text="{Binding nUROCEAline2}" />
                         </Grid>
                     </TabItem>
 
@@ -750,7 +817,7 @@
                 </TabControl>
 
             </Grid>
-            <ni:Graph Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="-92,78,592,119" RenderMode="Raster" Name="graphURLeft">
+            <ni:Graph Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="-75,94.667,609.333,102" RenderMode="Raster" Name="graphURLeft">
                 <ni:Graph.RenderTransform>
                     <RotateTransform Angle="90"/>
                 </ni:Graph.RenderTransform>
@@ -774,15 +841,18 @@
                     </ni:Graph.Axes>
                 </ni:Graph>
             </Grid>
-            <ni:IntensityGraph Grid.Row="2" Grid.Column="2" Name="graphURMain" RenderMode="Raster" MouseDoubleClick="graphURMain_MouseDoubleClick" >
+            <ni:IntensityGraph Grid.Row="2" Grid.Column="2" Name="graphURMain" RenderMode="Raster" Margin="5,33.667,5.333,5" >
                 <!-- Inverts Y-axis-->
                 <ni:IntensityGraph.VerticalAxis>
-                    <ni:AxisSingle IsInverted="True" Adjuster="FitExactly"/>
+                    <ni:AxisSingle IsInverted="True" MajorGridLines="{x:Null}" Name="axisURMainVertical" Adjuster="None" />
                 </ni:IntensityGraph.VerticalAxis >
+                <ni:IntensityGraph.HorizontalAxis>
+                    <ni:AxisSingle Name="axisURMainHorizontal" MajorGridLines="{x:Null}" Adjuster="None" />
+                </ni:IntensityGraph.HorizontalAxis>
                 <ni:IntensityGraph.ColorScale>
-                    <ni:ColorScale Location ="Far" LowColor="White" HighColor="Black">
-                        <ni:ColorScaleMarker Color="White" Value="0"/>
-                        <ni:ColorScaleMarker Color="Black" Value="16384"/>
+                    <ni:ColorScale Location ="Far" LowColor="Blue" HighColor="Yellow">
+                        <ni:ColorScaleMarker Color="Blue" Value="0"/>
+                        <ni:ColorScaleMarker Color="Yellow" Value="5"/>
                     </ni:ColorScale>
                 </ni:IntensityGraph.ColorScale>
             </ni:IntensityGraph>
@@ -804,7 +874,7 @@
                                 <ColumnDefinition Width="40" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">configuration</TextBlock>
-                            <Button Grid.Row="0" Grid.Column="1" Name="btnLRConfigurationStart" Click="btnLRConfigurationStart_Click">start</Button>
+                            <Button Grid.Row="0" Grid.Column="1" Name="btnLRConfigurationStart" Click="btnLRConfigurationStart_Click" Height="20" VerticalAlignment="Top">start</Button>
                             <Button Grid.Row="0" Grid.Column="2" Name="btnLRConfigurationStop" Click="btnLRConfigurationStop_Click">stop</Button>
                         </Grid>
                     </TabItem.Header>
@@ -903,7 +973,7 @@
                     <TabItem.Header>
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="20" />
+                                <RowDefinition />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="80" />
@@ -911,7 +981,7 @@
                                 <ColumnDefinition Width="40" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">operation</TextBlock>
-                            <Button Grid.Row="0" Grid.Column="1" Name="btnLROperationStart" Click="btnLROperationStart_Click">start</Button>
+                            <Button Grid.Row="0" Grid.Column="1" Name="btnLROperationStart" Click="btnLROperationStart_Click" Height="20" VerticalAlignment="Top">start</Button>
                             <Button Grid.Row="0" Grid.Column="2" Name="btnLROperationStop" Click="btnLROperationStop_Click">stop</Button>
                         </Grid>
                     </TabItem.Header>
@@ -931,7 +1001,8 @@
                             <RowDefinition Height="5" />
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="13.333" />
+                            <ColumnDefinition Width="7.667"/>
                             <ColumnDefinition Width="10" />
                             <ColumnDefinition Width="18" />
                             <ColumnDefinition Width="133"/>
@@ -949,34 +1020,34 @@
                             <ColumnDefinition Width="5" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="1" Grid.ColumnSpan="4" Grid.Row="1" FontWeight="Bold" TextDecorations="Underline" Margin="0,0,0,20" Grid.RowSpan="2">directory</TextBlock>
-                        <TextBox Grid.Column="2" Grid.ColumnSpan="6" Grid.Row="2" Name="txtLLFileDirectory" Text="{Binding strLLFileDirectory}" Margin="0,1,0,20" Grid.RowSpan="2" />
-                        <Button Grid.Column="8" Grid.Row="2" Name="btnLLFileDirectoryBrowse" Click="btnLLFileDirectoryBrowse_Click" Margin="0,1,0,20" Grid.RowSpan="2">browse</Button>
+                        <TextBlock Grid.Column="2" Grid.ColumnSpan="4" Grid.Row="1" FontWeight="Bold" TextDecorations="Underline" Margin="0,0,0,19" Grid.RowSpan="2">directory</TextBlock>
+                        <TextBox Grid.Column="3" Grid.ColumnSpan="6" Grid.Row="2" Name="txtLLFileDirectory" Text="{Binding strLLFileDirectory}" Margin="0,2,0,19" Grid.RowSpan="2" />
+                        <Button Grid.Column="9" Grid.Row="2" Name="btnLLFileDirectoryBrowse" Click="btnLLFileDirectoryBrowse_Click" Margin="0,2,0,19" Grid.RowSpan="2">browse</Button>
 
-                        <TextBlock Grid.Column="1" Grid.ColumnSpan="4" Grid.Row="4" FontWeight="Bold" TextDecorations="Underline" Margin="0,1,0,20" Grid.RowSpan="2">filename</TextBlock>
-                        <TextBox Grid.Column="2" Grid.ColumnSpan="5" Grid.Row="5" Name="txtLLFilePrefix" Text="{Binding strLLFilePrefix}" Margin="0,1,0,20" Grid.RowSpan="2" />
-                        <TextBox Grid.Column="7" Grid.Row="5" Name="txtLLFileNumber" Text="{Binding nLLFileNumber}" Margin="0,1,0,20" Grid.RowSpan="2" />
-                        <CheckBox Grid.Column="8" Grid.Row="5" HorizontalAlignment="Right" VerticalAlignment="Center" Name="chkLLFileRecord" IsChecked="{Binding bLLFileRecord}" Margin="0,4,0,2">record</CheckBox>
+                        <TextBlock Grid.Column="2" Grid.ColumnSpan="4" Grid.Row="4" FontWeight="Bold" TextDecorations="Underline" Margin="0,2,0,19" Grid.RowSpan="2">filename</TextBlock>
+                        <TextBox Grid.Column="3" Grid.ColumnSpan="5" Grid.Row="5" Name="txtLLFilePrefix" Text="{Binding strLLFilePrefix}" Margin="0,2,0,19" Grid.RowSpan="2" />
+                        <TextBox Grid.Column="8" Grid.Row="5" Name="txtLLFileNumber" Text="{Binding nLLFileNumber}" Margin="0,2,0,19" Grid.RowSpan="2" />
+                        <CheckBox Grid.Column="9" Grid.Row="5" HorizontalAlignment="Right" VerticalAlignment="Center" Name="chkLLFileRecord" IsChecked="{Binding bLLFileRecord}" Margin="0,5,0,2">record</CheckBox>
 
-                        <TextBlock Grid.Column="4" Grid.ColumnSpan="3" Grid.Row="7" HorizontalAlignment="Right" Margin="0,1,0,0">frame position</TextBlock>
-                        <TextBox Grid.Column="7" Grid.Row="7" Name="txtLLFileCycle" Text="{Binding nLLFileCycle}" Margin="0,1,0,0" />
+                        <TextBlock Grid.Column="5" Grid.ColumnSpan="3" Grid.Row="7" HorizontalAlignment="Right" Margin="0,2,0,0">frame position</TextBlock>
+                        <TextBox Grid.Column="8" Grid.Row="7" Name="txtLLFileCycle" Text="{Binding nLLFileCycle}" Margin="0,2,0,0" />
 
-                        <TextBlock Grid.Column="10" Grid.ColumnSpan="2" Grid.Row="1" FontWeight="Bold" TextDecorations="Underline">scan control</TextBlock>
-                        <TextBlock Grid.Column="11" Grid.Row="2">Fast Galvo (Start, Stop) in V</TextBlock>
-                        <TextBox Grid.Column="12" Grid.Row="2" Name="txtLLCenterX" Text="{Binding dLLCenterX}" />
-                        <TextBox Grid.Column="14" Grid.Row="2" Name="txtLLCenterY" Text="{Binding dLLCenterY}" />
-                        <TextBlock Grid.Column="11" Grid.Row="3">fast axis angle (degrees)</TextBlock>
-                        <TextBox Grid.Column="12" Grid.ColumnSpan="3" Grid.Row="3" Name="txtLLFastAngle" Text="{Binding dLLFastAngle}" />
-                        <TextBlock Grid.Column="11" Grid.Row="4">Slow Galvo (Start, Stop) in V</TextBlock>
-                        <TextBox Grid.Column="12" Grid.Row="4" Name="txtLLRangeFast" Text="{Binding dLLRangeFast}" />
-                        <TextBox Grid.Column="14" Grid.Row="4" Name="txtLLRangeSlow" Text="{Binding dLLRangeSlow}" />
-                        <TextBlock Grid.Column="11" Grid.Row="5">dwell (fast, slow)</TextBlock>
-                        <TextBox Grid.Column="12" Grid.Row="5" Name="txtLLDwellFast" Text="{Binding nLLDwellFast}" />
-                        <TextBox Grid.Column="14" Grid.Row="5" Name="txtLLDwellSlow" Text="{Binding nLLDwellSlow}" />
-                        <TextBlock Grid.Column="11" Grid.Row="6">Pol Mod (State1, State2) in V</TextBlock>
-                        <TextBox Grid.Column="12" Grid.Row="6" Name="txtLLRoundingFast" Text="{Binding nLLRoundingFast}" />
-                        <TextBox Grid.Column="14" Grid.Row="6" Name="txtLLRoundingSlow" Text="{Binding nLLRoundingSlow}" />
-                        <Button Grid.Column="11" Grid.ColumnSpan="4" Grid.Row="7" Name="btnLLGalvoUpdate" Click="btnLLGalvoUpdate_Click">update</Button>
+                        <TextBlock Grid.Column="11" Grid.ColumnSpan="2" Grid.Row="1" FontWeight="Bold" TextDecorations="Underline">scan control</TextBlock>
+                        <TextBlock Grid.Column="12" Grid.Row="2">Fast Galvo (Start, Stop) in V</TextBlock>
+                        <TextBox Grid.Column="13" Grid.Row="2" Name="txtLLFastGalvoStart" Text="{Binding fLLFastGalvoStart}" />
+                        <TextBox Grid.Column="15" Grid.Row="2" Name="txtLLFastGalvoStop" Text="{Binding fLLFastGalvoStop}" />
+                        <TextBlock Grid.Column="12" Grid.Row="3">fast galvo rounding</TextBlock>
+                        <TextBox Grid.Column="13" Grid.ColumnSpan="1" Grid.Row="3" Name="txtLLFastScanRounding" Text="{Binding nLLFastScanRounding}" />
+                        <TextBlock Grid.Column="12" Grid.Row="4">Slow Galvo (Start, Stop) in V</TextBlock>
+                        <TextBox Grid.Column="13" Grid.Row="4" Name="txtLLLLSlowGalvoStart" Text="{Binding fLLSlowGalvoStart}" />
+                        <TextBox Grid.Column="15" Grid.Row="4" Name="txtLLSlowGalvoStop" Text="{Binding fLLSlowGalvoStop}" />
+                        <TextBlock Grid.Column="12" Grid.Row="5">dwell (fast, slow)</TextBlock>
+                        <TextBox Grid.Column="13" Grid.Row="5" Name="txtLLDwellFast" Text="{Binding nLLDwellFast}" />
+                        <TextBox Grid.Column="15" Grid.Row="5" Name="txtLLDwellSlow" Text="{Binding nLLDwellSlow}" />
+                        <TextBlock Grid.Column="12" Grid.Row="6">Pol Mod (State1, State2) in V</TextBlock>
+                        <TextBox Grid.Column="13" Grid.Row="6" Name="txtLLRoundingFast" Text="{Binding nLLRoundingFast}" />
+                        <TextBox Grid.Column="15" Grid.Row="6" Name="txtLLRoundingSlow" Text="{Binding nLLRoundingSlow}" />
+                        <Button Grid.Column="12" Grid.ColumnSpan="4" Grid.Row="7" Name="btnLLGalvoUpdate" Click="btnLLGalvoUpdate_Click">update</Button>
 
                     </Grid>
                 </TabItem>
@@ -1214,7 +1285,7 @@
                             <RowDefinition Height="1*" />
                             <RowDefinition Height="1*" />
                         </Grid.RowDefinitions>
-                        
+
                         <Grid Grid.Row="0" Grid.RowSpan="2" Grid.Column="0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="10" />
@@ -1236,7 +1307,7 @@
                                 <ColumnDefinition Width="1*" />
                                 <ColumnDefinition Width="10" />
                             </Grid.ColumnDefinitions>
-                            
+
                             <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Name="txtCalibrationFile" Text="{Binding strCalibrationFile}" />
                             <Button Grid.Row="2" Grid.Column="1" Name="btnCalibrationFileLoad" Click="btnCalibrationFileLoad_Click" >load</Button>
                             <Button Grid.Row="2" Grid.Column="2" Name="btnCalibrationFileSave" Click="btnCalibrationFileSave_Click" >save</Button>
@@ -1253,7 +1324,7 @@
                             <TextBlock Grid.Row="8" Grid.Column="1">round</TextBlock>
                             <TextBox Grid.Row="8" Grid.Column="2" Name="txtCalibrationDepthRound" Text="{Binding nCalibrationDepthRound}" />
                         </Grid>
-                        
+
                         <ni:Graph Grid.Row="0" Grid.Column="1"  Grid.RowSpan="2" Name="graphCalibrationDepthProfile" RenderMode="Raster" >
                             <ni:Graph.Children>
                                 <ni:Cursor CrosshairBrush="Red" />
@@ -1263,7 +1334,7 @@
                                 <ni:AxisSingle Orientation="Vertical" MajorGridLines="{x:Null}" Adjuster="None" Name="axisCalibrationDepthVertical" />
                             </ni:Graph.Axes>
                         </ni:Graph>
-                        
+
                         <ni:Graph Grid.Row="0" Grid.Column="2" Name="graphCalibrationSpectrum" RenderMode="Raster" >
                             <ni:Graph.Children>
                                 <ni:Cursor CrosshairBrush="Red" />

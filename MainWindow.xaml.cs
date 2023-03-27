@@ -98,17 +98,19 @@ namespace nOCT
         private CThreadData threadData = new CThreadData();
         DispatcherTimer timerUIUpdate = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
 
-        #if TRUECUDA
+#if TRUECUDA
         nOCTcudaWrapper cudaWrapper;
-        #endif  // TRUECUDA
+#endif  // TRUECUDA
 
-        #if TRUEIPP
+#if TRUEIPP
         nOCTippWrapper ippWrapper;
-        #endif  // TRUEIPP
+#endif  // TRUEIPP
 
-        #if TRUEIMAQ
-        nOCTimaqWrapper imaqWrapper;
-        #endif  // TRUEIMAQ
+#if TRUEIMAQ
+        nOCTimaqWrapper_OneCam imaqWrapper_OneCam;
+        nOCTimaqWrapper_TwoCam imaqWrapper_TwoCam;
+
+#endif  // TRUEIMAQ
 
         #endregion  // define semi-globals
 
@@ -146,11 +148,11 @@ namespace nOCT
 
             cbLLCUDADevice.Items.Add("NI");
 
-            #if TRUEIPP
+#if TRUEIPP
             cbLLCUDADevice.Items.Add("IPP");
-            #endif  // TRUEIPP
+#endif  // TRUEIPP
 
-            #if TRUECUDA
+#if TRUECUDA
             int nDeviceCount = 0;
             StringBuilder strDeviceName = new StringBuilder(256);
             int nRet = nOCTcudaWrapper.getDeviceCount(ref nDeviceCount);
@@ -159,7 +161,7 @@ namespace nOCT
                 nRet = nOCTcudaWrapper.getDeviceName(nDevice, strDeviceName);
                 cbLLCUDADevice.Items.Add(nDevice + ":" + strDeviceName);
             }   // for (int nDevice
-            #endif  // TRUECUDA
+#endif  // TRUECUDA
 
             #endregion  // populate list of computation devices
 
@@ -278,11 +280,11 @@ namespace nOCT
                     if (parametername == UIData.name_bLLFileRecord) UIData.bLLFileRecord = bool.Parse(parametervalue);
                     if (parametername == UIData.name_nLLFileCycle) UIData.nLLFileCycle = int.Parse(parametervalue);
 
-                    if (parametername == UIData.name_fLLCenterX) UIData.fLLCenterX = float.Parse(parametervalue);
-                    if (parametername == UIData.name_fLLCenterY) UIData.fLLCenterY = float.Parse(parametervalue);
-                    if (parametername == UIData.name_fLLFastAngle) UIData.fLLFastAngle = float.Parse(parametervalue);
-                    if (parametername == UIData.name_fLLRangeFast) UIData.fLLRangeFast = float.Parse(parametervalue);
-                    if (parametername == UIData.name_fLLRangeSlow) UIData.fLLRangeSlow = float.Parse(parametervalue);
+                    if (parametername == UIData.name_fLLFastGalvoStart) UIData.fLLFastGalvoStart = float.Parse(parametervalue);
+                    if (parametername == UIData.name_fLLFastGalvoStop) UIData.fLLFastGalvoStop = float.Parse(parametervalue);
+                    if (parametername == UIData.name_nLLFastScanRounding) UIData.nLLFastScanRounding = int.Parse(parametervalue);
+                    if (parametername == UIData.name_fLLSlowGalvoStart) UIData.fLLSlowGalvoStart = float.Parse(parametervalue);
+                    if (parametername == UIData.name_fLLSlowGalvoStop) UIData.fLLSlowGalvoStop = float.Parse(parametervalue);
                     if (parametername == UIData.name_nLLDwellFast) UIData.nLLDwellFast = int.Parse(parametervalue);
                     if (parametername == UIData.name_nLLDwellSlow) UIData.nLLDwellSlow = int.Parse(parametervalue);
                     if (parametername == UIData.name_nLLRoundingFast) UIData.nLLRoundingFast = float.Parse(parametervalue);
@@ -406,11 +408,11 @@ namespace nOCT
             sw.WriteLine(UIData.name_nLLFileNumber + "=`" + UIData.nLLFileNumber + "'");
             sw.WriteLine(UIData.name_bLLFileRecord + "=`" + UIData.bLLFileRecord + "'");
             sw.WriteLine(UIData.name_nLLFileCycle + "=`" + UIData.nLLFileCycle + "'");
-            sw.WriteLine(UIData.name_fLLCenterX + "=`" + UIData.fLLCenterX + "'");
-            sw.WriteLine(UIData.name_fLLCenterY + "=`" + UIData.fLLCenterY + "'");
-            sw.WriteLine(UIData.name_fLLFastAngle + "=`" + UIData.fLLFastAngle + "'");
-            sw.WriteLine(UIData.name_fLLRangeFast + "=`" + UIData.fLLRangeFast + "'");
-            sw.WriteLine(UIData.name_fLLRangeSlow + "=`" + UIData.fLLRangeSlow + "'");
+            sw.WriteLine(UIData.name_fLLFastGalvoStart + "=`" + UIData.fLLFastGalvoStart + "'");
+            sw.WriteLine(UIData.name_fLLFastGalvoStop + "=`" + UIData.fLLFastGalvoStop + "'");
+            sw.WriteLine(UIData.name_nLLFastScanRounding + "=`" + UIData.nLLFastScanRounding + "'");
+            sw.WriteLine(UIData.name_fLLSlowGalvoStart + "=`" + UIData.fLLSlowGalvoStart + "'");
+            sw.WriteLine(UIData.name_fLLSlowGalvoStop + "=`" + UIData.fLLSlowGalvoStop + "'");
             sw.WriteLine(UIData.name_nLLDwellFast + "=`" + UIData.nLLDwellFast + "'");
             sw.WriteLine(UIData.name_nLLDwellSlow + "=`" + UIData.nLLDwellSlow + "'");
             sw.WriteLine(UIData.name_nLLRoundingFast + "=`" + UIData.nLLRoundingFast + "'");
@@ -536,11 +538,50 @@ namespace nOCT
                 #endregion UL
 
                 #region UR
+                /* Begin: 20211213 editing by JL: UR display */
+                switch (threadData.nProcess2Type)
+                {
+                    case 0:
+                        threadData.strProcess2ThreadStatus = "...none...";
+                        break;
+                    case 1:
+                        threadData.strProcess2ThreadStatus = "...intensity...";
+                        break;
+                    case 2:
+                        threadData.strProcess2ThreadStatus = "...attenuation...";
+                        break;
+                    case 3:
+                        threadData.strProcess2ThreadStatus = "...phase...";
+                        break;
+                    case 4:
+                        threadData.strProcess2ThreadStatus = "...polarization...";
+                        break;
+                    case 5:
+                        threadData.strProcess2ThreadStatus = "...angiography...";
+                        break;
+                    case 6:
+                        threadData.strProcess2ThreadStatus = "...elastography...";
 
-//                graphURLeft.Refresh();
-//               graphURTop.Refresh();
-//                graphURMain.Refresh();
 
+                        axisURMainVertical.Range = new Range<float>(0f, (float)(threadData.nProcessedAlineLength));
+                        axisURMainHorizontal.Range = new Range<float>(0f, (float)(threadData.nRawNumberAlines >> 1));
+
+
+
+                        break;
+                    case 7:
+                        threadData.strProcess2ThreadStatus = "...spectroscopy...";
+                        break;
+                    case 8:
+                        threadData.strProcess2ThreadStatus = "...spectral binning...";
+                        break;
+                }   // switch (nProcess2Type
+
+                /* End: 20211213 editing by JL: UR display */
+
+                graphURLeft.Refresh();
+                graphURTop.Refresh();
+                graphURMain.Refresh();
                 #endregion  // UR
 
                 #region LL
@@ -652,7 +693,7 @@ namespace nOCT
             watch.Stop();
             var elapsedMS = watch.ElapsedMilliseconds;
             float fWeight = 0.95f;
-            UIData.fLRUIUpdateTime = fWeight * UIData.fLRUIUpdateTime + (1.0f - fWeight) * ((float) elapsedMS);
+            UIData.fLRUIUpdateTime = fWeight * UIData.fLRUIUpdateTime + (1.0f - fWeight) * ((float)elapsedMS);
 
         }   // void UIUpdate
 
@@ -712,18 +753,20 @@ namespace nOCT
                 case 0: // SD-OCT
                     threadData.nRawNumberAlines = UIData.nLLChunksPerImage * UIData.nLLLinesPerChunk;
                     threadData.nRawAlineLength = UIData.nLLIMAQLineLength;
+                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines;
+                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
                     threadData.pfProcess1DAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pfProcess1IMAQParallel = new float[threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess2ADAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pfProcess2AIMAQParallel = new float[threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess2ComplexRealParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
                     threadData.pfProcess2ComplexImagParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
-                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines;
-                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
                     break;
                 case 1: // PS SD-OCT
                     threadData.nRawNumberAlines = UIData.nLLChunksPerImage * UIData.nLLLinesPerChunk;  // total number of even and odd for each camera (parallel and perpendicular)
                     threadData.nRawAlineLength = UIData.nLLIMAQLineLength;
+                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines;
+                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
                     threadData.pfProcess1DAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pfProcess1IMAQParallel = new float[threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess1IMAQPerpendicular = new float[threadData.nRawNumberAlines * threadData.nRawAlineLength];
@@ -734,32 +777,30 @@ namespace nOCT
                     threadData.pfProcess2ComplexImagParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
                     threadData.pfProcess2ComplexRealPerpendicular = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
                     threadData.pfProcess2ComplexImagPerpendicular = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
-                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines / 2;  // by combining even and odds
-                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
                     break;
                 case 2: // line field
                     threadData.nRawNumberAlines = UIData.nLLIMAQLineLength;
                     threadData.nRawAlineLength = UIData.nLLAlazarLineLength;  // using the alazar length even though acquisition will be on DAQ
+                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines;
+                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
                     threadData.pfProcess1DAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pfProcess1IMAQParallel = new float[threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess2ADAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pfProcess2AIMAQParallel = new float[threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess2ComplexRealParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
                     threadData.pfProcess2ComplexImagParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
-                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines;
-                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
                     break;
                 case 3: // OFDI
                     threadData.nRawNumberAlines = UIData.nLLChunksPerImage * UIData.nLLLinesPerChunk;  // will be two channels, each with this number of lines
                     threadData.nRawAlineLength = UIData.nLLAlazarLineLength;
+                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines;
+                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
                     threadData.pnProcess1Alazar = new UInt16[2 * threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess1DAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pnProcess2AAlazar = new UInt16[2 * threadData.nRawNumberAlines * threadData.nRawAlineLength];
                     threadData.pfProcess2ADAQ = new float[4 * threadData.nRawNumberAlines];
                     threadData.pfProcess2ComplexRealParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
                     threadData.pfProcess2ComplexImagParallel = new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength];
-                    threadData.nProcessedNumberAlines = threadData.nRawNumberAlines;
-                    threadData.nProcessedAlineLength = threadData.nRawAlineLength / 2;
                     break;
                 case 4: // PS OFDI
                     break;
@@ -1004,14 +1045,14 @@ namespace nOCT
             int nDevice = UIData.nLLCUDADevice;
 
             int nIPPExists = 0;
-            #if TRUEIPP
+#if TRUEIPP
             nIPPExists = 1;
-            #endif  // TRUEIPP
+#endif  // TRUEIPP
 
             int nCUDAExists = 0;
-            #if TRUECUDA
+#if TRUECUDA
             nCUDAExists = 1;
-            #endif  // TRUECUDA
+#endif  // TRUECUDA
 
             threadData.nProcess1ProcessingType = 0;  // NI is default
             if ((nDevice - nIPPExists) == 0)
@@ -1068,9 +1109,9 @@ namespace nOCT
 
         private void btnLROperationStart_Click(object sender, RoutedEventArgs e)
         {
-#region threads
+            #region threads
             threadData.mreMainRun.Set();
-#endregion
+            #endregion
         }
 
 
@@ -1087,9 +1128,39 @@ namespace nOCT
             GC.Collect();
         }   // private void btnLRGCCollect_Click
 
+        /* Begin: 20211208 editing by JL */
+        private void btnURIntensityApply_Click(object sender, RoutedEventArgs e)
+        {
+            // GC.Collect();
+        }   // private void btnURIntensityApply_Click
+
+        private void rbUROCEDisplayMode_Checked_Intensity(object sender, RoutedEventArgs e)
+        {
+            try { UIData.nUROCEDisplayModeRadioButtonIndex = 0; }
+            catch { }
+
+            cbURIntensityDisplayOptions.IsEnabled = true;
+            cbUROCEDisplayOptions.IsEnabled = false;
+        }
+
+        private void rbUROCEDisplayMode_Checked_OCE(object sender, RoutedEventArgs e)
+        {
+            try { UIData.nUROCEDisplayModeRadioButtonIndex = 1; }
+            catch { }
+
+            cbURIntensityDisplayOptions.IsEnabled = false;
+            cbUROCEDisplayOptions.IsEnabled = true;
+            // int a = 0; 
+        }
+
+        /* End: 20211208 editing by JL */
+
+
+
+
         void MainThread()
         {
-#region initializing
+            #region initializing
             threadData.strMainThreadStatus = "Initializing...";
 
             // start other threads
@@ -1142,9 +1213,9 @@ namespace nOCT
             // initialization complete
             threadData.mreMainReady.Set();
             threadData.strMainThreadStatus = "Ready!";
-#endregion
+            #endregion
 
-#region main loop
+            #region main loop
             threadData.strMainThreadStatus = "Set...";
             if (WaitHandle.WaitAny(pweStart) == 1)
             {
@@ -1168,9 +1239,9 @@ namespace nOCT
                 }
 
             }
-#endregion
+            #endregion
 
-#region cleanup
+            #region cleanup
             threadData.strMainThreadStatus = "Cleaning up...";
 
             // send kill command to other threads
@@ -1200,38 +1271,52 @@ namespace nOCT
             // all done
             threadData.mreMainDead.Set();
             threadData.strMainThreadStatus = "Done.";
-#endregion
+            #endregion
 
         }
 
         void OutputThread()
         {
-#region initializing
+            #region initializing
             threadData.strOutputThreadStatus = "Initializing...";
 
 
             // initialization
             double dLineTriggerRate = UIData.nLLLineRate;
 
-            
+
             int nNumberLines = UIData.nLLLinesPerChunk * UIData.nLLChunksPerImage;
             int nNumberFrames = UIData.nLLImagesPerVolume;
-            float fFastGalvoStart = UIData.fLLCenterX;
-            float fFastGalvoStop = UIData.fLLCenterY;
-            float fSlowGalvoStart = UIData.fLLRangeFast;
-            float fSlowGalvoStop = UIData.fLLRangeSlow;
+            float fFastGalvoStart = UIData.fLLFastGalvoStart;
+            float fFastGalvoStop = UIData.fLLFastGalvoStop;
+            float fSlowGalvoStart = UIData.fLLSlowGalvoStart;
+            float fSlowGalvoStop = UIData.fLLSlowGalvoStop;
             float nPolModState1 = UIData.nLLRoundingFast;
             float nPolModState2 = UIData.nLLRoundingSlow;
+            int nFastScanRounding = UIData.nLLFastScanRounding;
 
+            int nNumberPositions;
+            int nNumberTicks = 2 * nNumberLines;
             int nPolarizationStates = 2;
-            int nNumberLinerPerState = nNumberLines / nPolarizationStates;
+            int nLinesPerPosition = 2;            
+            int nLinesPerUltrasound = 2;
+
+
+
+            bool bAltFrame = false;     // alternating frame mode: frame 1 US-OCE, frame 2 PS-OCT
+
+            nNumberPositions = nNumberLines / nLinesPerPosition;
 
 
 #if (TRUEDAQ)
             // counter task
             Task taskCtr = new Task();
+            //taskCtr.DIChannels.CreateChannel("Dev1/PFI0", "ctrClock", ChannelLineGrouping.OneChannelForEachLine);
+            // taskCtr.CIChannels.CreatePulseChannelFrequency("/Dev1/PFI7", "", 0.0, 5.0, CIPulseFrequencyUnits.Hertz);
             taskCtr.COChannels.CreatePulseChannelFrequency("Dev1/ctr0", "ctrClock", COPulseFrequencyUnits.Hertz, COPulseIdleState.Low, 0.0, 2 * dLineTriggerRate, 0.5);
             taskCtr.Timing.ConfigureImplicit(SampleQuantityMode.ContinuousSamples, 1000);
+
+            /* Begin: 20220523 editing by JL: add auxiliary trigger line */
 
             // digital task
             Task taskDig = new Task();
@@ -1239,42 +1324,148 @@ namespace nOCT
             taskDig.DOChannels.CreateChannel("Dev1/port0/line0", "digLineTrigger", ChannelLineGrouping.OneChannelForEachLine);
             taskDig.DOChannels.CreateChannel("Dev1/port0/line1", "digFrameTrigger", ChannelLineGrouping.OneChannelForEachLine);
             taskDig.DOChannels.CreateChannel("Dev1/port0/line2", "digVolumeTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            taskDig.DOChannels.CreateChannel("Dev1/port0/line3", "digAuxiliaryTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            taskDig.DOChannels.CreateChannel("Dev1/port0/line4", "digAnaWaveformTrigger", ChannelLineGrouping.OneChannelForAllLines);
             taskDig.Timing.ConfigureSampleClock("/Dev1/Ctr0InternalOutput", 2 * dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
+            //taskDig.Timing.ConfigureSampleClock("/Dev1/PFI0", 2 * dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
+            //taskDig.Triggers.StartTrigger.ConfigureDigitalEdgeTrigger("/Dev1/PFI2", DigitalEdgeStartTriggerEdge.Rising);  
             taskDig.Control(TaskAction.Verify);
 
             DigitalWaveform[] digWFM;
-            digWFM = new DigitalWaveform[3];
+            digWFM = new DigitalWaveform[5];
             // line trigger
             int i = 0, j, k, l;
-            digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
+            digWFM[i] = new DigitalWaveform(nNumberFrames * nNumberTicks, 1);
             for (j = 0; j < nNumberFrames; j++)
             {
-                for (k = 0; k < 2 * nNumberLines; k += 2)
+                for (k = 0; k < nNumberTicks; k += 2)
                 {
-                    digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown; // j * 2 * nNumberLines
-                    digWFM[i].Signals[0].States[j * 2 * nNumberLines + k + 1] = DigitalState.ForceUp;
+                    digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp; // j * 2 * nNumberLines
+                    digWFM[i].Signals[0].States[j * nNumberTicks + k + 1] = DigitalState.ForceDown;
                 }
             }
             // frame trigger
             i = 1;
-            digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
+            digWFM[i] = new DigitalWaveform(nNumberFrames * nNumberTicks, 1);
             for (j = 0; j < nNumberFrames; j++)
             {
                 k = 0;
-                digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceUp;
-                for (k = 1; k < 2 * nNumberLines; k++)
-                    digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown;
+                digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp;
+                for (k = 1; k < nNumberTicks; k++)
+                    digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
             }
 
             // volume trigger
             i = 2;
-            digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
+            digWFM[i] = new DigitalWaveform(nNumberFrames * nNumberTicks, 1);
             for (j = 0; j < nNumberFrames; j++)
-                for (k = 1; k < 2 * nNumberLines; k++)
-                    digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown;
+                for (k = 1; k < nNumberTicks; k++)
+                    digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
             digWFM[i].Signals[0].States[0] = DigitalState.ForceUp;
+
+            // auxiliary trigger
+            i = 3;
+            digWFM[i] = new DigitalWaveform(nNumberFrames * nNumberTicks, 1);
+            if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
+            {
+                for (j = 0; j < nNumberFrames; j++)
+                {
+                    for (k = 0; k < nNumberTicks; k++)
+                    {
+                        if (k % (2 * nLinesPerUltrasound) == 0)
+                            digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp;
+                        else
+                            digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
+
+                    }
+                }
+
+            }
+            else // alter frames: PS and OCE on alternating frames 
+            {
+                for (j = 0; j < nNumberFrames; j++)
+                {
+                    if (j % 2 == 0) // US is sent on odd frames 
+                    {
+                        for (k = 0; k < nNumberTicks; k++)
+                        {
+                            if (k % 2 == 0)
+                                digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp;
+                            else
+                                digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
+
+                        }
+                    }
+                    else // no US on even frames 
+                    {
+                        for (k = 0; k < nNumberTicks; k++)
+                            digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
+                    }
+
+                }
+
+            }
+
+            // analog waveform trigger 
+            i = 4;
+            digWFM[i] = new DigitalWaveform(nNumberFrames * nNumberTicks, 1);
+            for (j = 0; j < nNumberFrames; j++)
+            {
+                k = 0;
+                digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp;
+                for (k = 1; k < nNumberTicks; k++)
+                    digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
+            }
+
             // write waveform
             digWriter.WriteWaveform(false, digWFM);
+
+            /* End: 20220523 editing by JL: add auxiliary trigger line */
+
+
+            //// digital task
+            //Task taskDig = new Task();
+            //DigitalMultiChannelWriter digWriter = new DigitalMultiChannelWriter(taskDig.Stream);
+            //taskDig.DOChannels.CreateChannel("Dev1/port0/line0", "digLineTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            //taskDig.DOChannels.CreateChannel("Dev1/port0/line1", "digFrameTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            //taskDig.DOChannels.CreateChannel("Dev1/port0/line2", "digVolumeTrigger", ChannelLineGrouping.OneChannelForEachLine);
+            ////taskDig.Timing.ConfigureSampleClock("/Dev1/Ctr0InternalOutput", 2 * dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
+            //taskDig.Timing.ConfigureSampleClock("/Dev1/PFI0", dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
+            //taskDig.Control(TaskAction.Verify);
+
+            //DigitalWaveform[] digWFM;
+            //digWFM = new DigitalWaveform[3];
+            //// line trigger
+            //int i = 0, j, k, l;
+            //digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
+            //for (j = 0; j < nNumberFrames; j++)
+            //{
+            //    for (k = 0; k < 2 * nNumberLines; k += 2)
+            //    {
+            //        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown; // j * 2 * nNumberLines
+            //        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k + 1] = DigitalState.ForceUp;
+            //    }
+            //}
+            //// frame trigger
+            //i = 1;
+            //digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
+            //for (j = 0; j < nNumberFrames; j++)
+            //{
+            //    k = 0;
+            //    digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceUp;
+            //    for (k = 1; k < 2 * nNumberLines; k++)
+            //        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown;
+            //}
+
+            //// volume trigger
+            //i = 2;
+            //digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
+            //for (j = 0; j < nNumberFrames; j++)
+            //    for (k = 1; k < 2 * nNumberLines; k++)
+            //        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown;
+            //digWFM[i].Signals[0].States[0] = DigitalState.ForceUp;
+            //// write waveform
+            //digWriter.WriteWaveform(false, digWFM);
 
 
             // analog waveform
@@ -1283,7 +1474,9 @@ namespace nOCT
             taskAna.AOChannels.CreateVoltageChannel("Dev1/ao0", "anaGalvoFast", -5.0, +5.0, AOVoltageUnits.Volts);
             taskAna.AOChannels.CreateVoltageChannel("Dev1/ao1", "anaGalvoSlow", -5.0, +5.0, AOVoltageUnits.Volts);
             taskAna.AOChannels.CreateVoltageChannel("Dev1/ao2", "anaPolMod", -10.0, +10.0, AOVoltageUnits.Volts);
-            taskAna.Timing.ConfigureSampleClock("/Dev1/PFI7", dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
+            taskAna.Timing.ConfigureSampleClock("/Dev1/PFI0", dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
+            taskAna.Triggers.StartTrigger.ConfigureDigitalEdgeTrigger("/Dev1/PFI1", DigitalEdgeStartTriggerEdge.Rising);
+            //taskAna.Triggers.StartTrigger.ConfigureAnalogEdgeTrigger("/Dev1/ai0", AnalogEdgeStartTriggerSlope.Rising, 1.0); 
 
 
             double[,] anaWFM = new double[3, nNumberFrames * nNumberLines];
@@ -1291,33 +1484,140 @@ namespace nOCT
             i = 0;
             for (j = 0; j < nNumberFrames; j++)
             {
-                for (k = 0; k < nNumberLinerPerState; k++)
+                for (k = 0; k < nNumberPositions; k++)
                 {
-                    for (l = 0; l < nPolarizationStates; l++)
+                    //for (l = 0; l < nLinesPerPosition; l++)
+                    //    anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberPositions;
+
+                    for (l = 0; l < nLinesPerPosition; l++)
                     {
-                        anaWFM[i, j * nNumberLines + 2 * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberLinerPerState;
+                        anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberPositions;
+
+                        if (k < nFastScanRounding)
+                        {
+                            anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = 0.5 * (fFastGalvoStop - fFastGalvoStart) * Math.Cos(2 * Math.PI * k / (4 * nFastScanRounding) + Math.PI / 2) + (fFastGalvoStop + fFastGalvoStart) / 2;
+                        }
+                        else
+                        {
+                            if (k < nNumberPositions - nFastScanRounding)
+                                anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * (k - (nFastScanRounding - 1)) / (nNumberPositions - 2 * nFastScanRounding + 1);
+                            else
+                                anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = 0.5 * (fFastGalvoStop - fFastGalvoStart) * Math.Cos(2 * Math.PI * (k - (nNumberPositions - nFastScanRounding)) / (4 * nFastScanRounding)) + (fFastGalvoStop + fFastGalvoStart) / 2;
+                        }
+
+                    }
+
+                }
+            }
+
+            //for (j = 0; j < nNumberFrames; j++)
+            //{
+            //    for (k = 0; k < nNumberLinesPerState; k++)
+            //    {
+            //        for (l = 0; l < 4; l++)
+            //        {
+            //            anaWFM[i, j * nNumberLines + 4 * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberLinesPerState;
+            //        }
+            //    }
+            //}
+
+
+            // slow galvo
+            i = 1;
+            if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
+            {
+                for (j = 0; j < nNumberFrames; j++)
+                {
+                    for (k = 0; k < nNumberLines; k++)
+                    {
+                        anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
                     }
                 }
             }
-            // slow galvo
-            i = 1;
-            for (j = 0; j < nNumberFrames; j++)
+            else // alter frames: PS and OCE on alternating frames 
             {
-                for (k = 0; k < nNumberLines; k++)
+                for (j = 0; j < nNumberFrames; j++)
                 {
-                    anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
+                    if (j % 2 == 0) // US is sent on odd frames 
+                    {
+                        for (k = 0; k < nNumberLines; k++)
+                        {
+                            anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
+                        }
+                    }
+                    else // no US on even frames 
+                    {
+                        for (k = 0; k < nNumberLines; k++)
+                        {
+                            anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * (j - 1) / nNumberFrames;
+                        }
+                    }
                 }
             }
+
+            //for (j = 0; j < nNumberFrames; j++)
+            //{
+            //    for (k = 0; k < nNumberLines; k++)
+            //    {
+            //        anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
+            //    }
+            //}
+
+
             // pol mod
             i = 2;
-            for (j = 0; j < nNumberFrames; j++)
+            if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
             {
-                for (k = 0; k < nNumberLines; k += 2)
+                for (j = 0; j < nNumberFrames; j++)
                 {
-                    anaWFM[i, j * nNumberLines + k] = nPolModState1;
-                    anaWFM[i, j * nNumberLines + k + 1] = nPolModState2;
+                    for (k = 0; k < nNumberLines; k += nLinesPerPosition)
+                    {
+                        anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
+                        //anaWFM[i, j * nNumberLines + k + 1] = nPolModState2;
+                        //anaWFM[i, j * nNumberLines + k + 2] = nPolModState1;
+                        //anaWFM[i, j * nNumberLines + k + 3] = nPolModState1;
+                        //anaWFM[i, j * nNumberLines + k + 4] = nPolModState2;
+                        //anaWFM[i, j * nNumberLines + k + 5] = nPolModState2;
+                        //anaWFM[i, j * nNumberLines + k + 6] = nPolModState2;
+                        //anaWFM[i, j * nNumberLines + k + 7] = nPolModState2;
+                    }
                 }
             }
+            else // alter frames: PS and OCE on alternating frames 
+            {
+                for (j = 0; j < nNumberFrames; j++)
+                {
+                    if (j % 2 == 0) // US is sent on odd frames 
+                    {
+                        for (k = 0; k < nNumberLines; k++)
+                        {
+                            anaWFM[i, j * nNumberLines + k] = nPolModState2;
+                        }
+                    }
+                    else // no US on even frames 
+                    {
+                        for (k = 0; k < nNumberLines; k += nLinesPerPosition)
+                        {
+                            anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
+                            anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
+                            anaWFM[i, j * nNumberLines + k + 2] = nPolModState2;
+                            anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
+                        }
+                    }
+                }
+            }
+            //for (j = 0; j < nNumberFrames; j++)
+            //{
+            //    for (k = 0; k < nNumberLines; k += 4)
+            //    {
+            //        anaWFM[i, j * nNumberLines + k] = nPolModState1;
+            //        anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
+            //        anaWFM[i, j * nNumberLines + k + 2] = nPolModState2;
+            //        anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
+            //    }
+            //}
+
+
             anaWriter.WriteMultiSample(false, anaWFM);
 #endif
 
@@ -1333,9 +1633,9 @@ namespace nOCT
             // initialization complete
             threadData.mreOutputReady.Set();
             threadData.strOutputThreadStatus = "Ready!";
-#endregion
+            #endregion
 
-#region main loop
+            #region main loop
             threadData.strOutputThreadStatus = "Set...";
             if (WaitHandle.WaitAny(pweStart) == 1)
             {
@@ -1344,7 +1644,7 @@ namespace nOCT
                 threadData.mreCameraSync.WaitOne();
 
                 // let the thread sleep for 1 ms
-                Thread.Sleep(1); 
+                Thread.Sleep(1);
 
 #if (TRUEDAQ)
                 // start tasks
@@ -1355,6 +1655,22 @@ namespace nOCT
 
                 while (WaitHandle.WaitAny(pweLoop) == 1)
                 {
+                    /* Begin: 20210501 editing by JL */
+
+                    if (threadData.mreOutputUpdate.WaitOne(0) == true)
+                    {
+                        fFastGalvoStart = UIData.fLLFastGalvoStart;
+                        fFastGalvoStop = UIData.fLLFastGalvoStop;
+                        fSlowGalvoStart = UIData.fLLSlowGalvoStart;
+                        fSlowGalvoStop = UIData.fLLSlowGalvoStop;
+                        nPolModState1 = UIData.nLLRoundingFast;
+                        nPolModState2 = UIData.nLLRoundingSlow;
+                        nFastScanRounding = UIData.nLLFastScanRounding;
+
+
+                    } // if(threadData.mreOutputUpdate.WaitOne(0) == true)
+                    /* End: 20210501 editing by JL */
+
                     threadData.mreOutputUpdate.Reset();
                     threadData.strOutputThreadStatus = "updating...";
 
@@ -1363,42 +1679,116 @@ namespace nOCT
                     i = 0;
                     for (j = 0; j < nNumberFrames; j++)
                     {
-                        for (k = 0; k < nNumberLinerPerState; k++)
+                        for (k = 0; k < nNumberPositions; k++)
                         {
-                            for (l = 0; l < nPolarizationStates; l++)
+                            //for (l = 0; l < nLinesPerPosition; l++)
+                            //    anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberPositions;
+
+                            for (l = 0; l < nLinesPerPosition; l++)
                             {
-                                anaWFM[i, j * nNumberLines + 2 * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberLinerPerState;
+                                anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberPositions;
+
+                                if (k < nFastScanRounding)
+                                {
+                                    anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = 0.5 * (fFastGalvoStop - fFastGalvoStart) * Math.Cos(2 * Math.PI * k / (4 * nFastScanRounding) + Math.PI / 2) + (fFastGalvoStop + fFastGalvoStart) / 2;
+                                }
+                                else
+                                {
+                                    if (k < nNumberPositions - nFastScanRounding)
+                                        anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * (k - (nFastScanRounding - 1)) / (nNumberPositions - 2 * nFastScanRounding + 1);
+                                    else
+                                        anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = 0.5 * (fFastGalvoStop - fFastGalvoStart) * Math.Cos(2 * Math.PI * (k - (nNumberPositions - nFastScanRounding)) / (4 * nFastScanRounding)) + (fFastGalvoStop + fFastGalvoStart) / 2;
+                                }
+
                             }
+
                         }
                     }
                     // slow galvo
                     i = 1;
-                    for (j = 0; j < nNumberFrames; j++)
+                    if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
                     {
-                        for (k = 0; k < nNumberLines; k++)
+                        for (j = 0; j < nNumberFrames; j++)
                         {
-                            anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
+                            for (k = 0; k < nNumberLines; k++)
+                            {
+                                anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
+                            }
                         }
                     }
+                    else // alter frames: PS and OCE on alternating frames 
+                    {
+                        for (j = 0; j < nNumberFrames; j++)
+                        {
+                            if (j % 2 == 0) // US is sent on odd frames 
+                            {
+                                for (k = 0; k < nNumberLines; k++)
+                                {
+                                    anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
+                                }
+                            }
+                            else // no US on even frames 
+                            {
+                                for (k = 0; k < nNumberLines; k++)
+                                {
+                                    anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * (j - 1) / nNumberFrames;
+                                }
+                            }
+                        }
+                    }
+
                     // pol mod
                     i = 2;
-                    for (j = 0; j < nNumberFrames; j++)
+                    if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
                     {
-                        for (k = 0; k < nNumberLines; k += 2)
+                        for (j = 0; j < nNumberFrames; j++)
                         {
-                            anaWFM[i, j * nNumberLines + k] = nPolModState1;
-                            anaWFM[i, j * nNumberLines + k + 1] = nPolModState2;
+                            for (k = 0; k < nNumberLines; k += nLinesPerPosition)
+                            {
+                                anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
+                                //anaWFM[i, j * nNumberLines + k + 1] = nPolModState2;
+                                //anaWFM[i, j * nNumberLines + k + 2] = nPolModState1;
+                                //anaWFM[i, j * nNumberLines + k + 3] = nPolModState1;
+                                //anaWFM[i, j * nNumberLines + k + 4] = nPolModState2;
+                                //anaWFM[i, j * nNumberLines + k + 5] = nPolModState2;
+                                //anaWFM[i, j * nNumberLines + k + 6] = nPolModState2;
+                                //anaWFM[i, j * nNumberLines + k + 7] = nPolModState2;
+                            }
                         }
                     }
+                    else // alter frames: PS and OCE on alternating frames 
+                    {
+                        for (j = 0; j < nNumberFrames; j++)
+                        {
+                            if (j % 2 == 0) // US is sent on odd frames 
+                            {
+                                for (k = 0; k < nNumberLines; k++)
+                                {
+                                    anaWFM[i, j * nNumberLines + k] = nPolModState2;
+                                }
+                            }
+                            else // no US on even frames 
+                            {
+                                for (k = 0; k < nNumberLines; k += nLinesPerPosition)
+                                {
+                                    anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
+                                    anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
+                                    anaWFM[i, j * nNumberLines + k + 2] = nPolModState2;
+                                    anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
+                                }
+                            }
+                        }
+                    }
+
                     anaWriter.BeginWriteMultiSample(false, anaWFM, null, null);
 #endif
 
                     threadData.strOutputThreadStatus = "idle...";
                 }
             }
-#endregion
+            #endregion
 
-#region cleanup
+            #region cleanup
             threadData.strOutputThreadStatus = "Cleaning up...";
 
 #if (TRUEDAQ)
@@ -1414,7 +1804,7 @@ namespace nOCT
 
             threadData.mreOutputDead.Set();
             threadData.strOutputThreadStatus = "Done.";
-#endregion
+            #endregion
 
         }
 
@@ -1503,7 +1893,7 @@ namespace nOCT
                             threadData.mreAcquireNodeReady.Set();
                             threadData.nodeAcquire.Value.bRecord = threadData.bRecord;
 
-                            /* Begin: 20201208 editing by JL */                            
+                            /* Begin: 20201208 editing by JL */
                             threadData.nodeAcquire.Value.strFilename = UIData.strLLFileDirectory + "\\" + UIData.strLLFilePrefix + String.Format("{0}", nFileNumber) + ".dat";
                             threadData.nodeAcquire.Value.nFramePosition = nFramePosition;
                             threadData.nodeAcquire.Value.nFileNumber = nFileNumber;
@@ -1513,11 +1903,11 @@ namespace nOCT
                             /* Begin: 20210414 editing by JL */
                             threadData.nodeAcquire.Value.strDateTime = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fffffff");
                             /* End: 20210414 editing by JL */
-                            nFileNumber++;                            
+                            nFileNumber++;
                             nFramePosition++;
 
                             if (nFramePosition > UIData.nLLImagesPerVolume)
-                                nFramePosition = 1; 
+                                nFramePosition = 1;
                             /* End: 20201208 editing by JL */
 
 
@@ -1610,7 +2000,7 @@ namespace nOCT
 
         void AcquireAlazarThread()
         {
-#region initializing
+            #region initializing
             threadData.strAcquireAlazarThreadStatus = "i";
 
             // initialization
@@ -1650,9 +2040,9 @@ namespace nOCT
 
             threadData.mreAcquireAlazarReady.Set();
             threadData.strAcquireAlazarThreadStatus = "r";
-#endregion
+            #endregion
 
-#region main loop
+            #region main loop
             threadData.strAcquireAlazarThreadStatus = "s";
             if (WaitHandle.WaitAny(pweStart) == 1)
             {
@@ -1696,30 +2086,30 @@ namespace nOCT
                     }  // if (nStatus
                 }  // while (threadData.mreAcquireAlazarKill.WaitOne
             }  // if (WaitHandle.WaitAny
-#endregion
+            #endregion
 
-#region cleanup
+            #region cleanup
             if (bTroublemaker)
             {
                 threadData.mreAcquireAlazarDead.Set();
             }
             else
             {  // if (bTroublemaker
-#region cleanup
+                #region cleanup
                 threadData.strAcquireAlazarThreadStatus = "c";
                 // clean up code
                 ;
                 // signal other threads
                 threadData.mreAcquireAlazarDead.Set();
                 threadData.strAcquireAlazarThreadStatus = "d";
-#endregion
+                #endregion
             }  // if (bTroublemaker
-#endregion
+            #endregion
         }
 
         void AcquireDAQThread()
         {
-#region initializing
+            #region initializing
             threadData.strAcquireDAQThreadStatus = "i";
 
             // initialization
@@ -1757,9 +2147,9 @@ namespace nOCT
             }
             threadData.mreAcquireDAQReady.Set();
             threadData.strAcquireDAQThreadStatus = "r";
-#endregion
+            #endregion
 
-#region main loop
+            #region main loop
             threadData.strAcquireDAQThreadStatus = "s";
             if (WaitHandle.WaitAny(pweStart) == 1)
             {
@@ -1803,25 +2193,25 @@ namespace nOCT
                     }
                 }  // while (threadData.mreAcquireDAQKill.WaitOne
             }  // if (WaitHandle.WaitAny
-#endregion
+            #endregion
 
-#region cleanup
+            #region cleanup
             if (bTroublemaker)
             {
                 threadData.mreAcquireDAQDead.Set();
             }
             else
             {  // if (bTroublemaker
-#region cleanup
+                #region cleanup
                 threadData.strAcquireDAQThreadStatus = "c";
                 // clean up code
                 ;
                 // signal other threads
                 threadData.mreAcquireDAQDead.Set();
                 threadData.strAcquireDAQThreadStatus = "d";
-#endregion
+                #endregion
             }  // if (bTroublemaker
-#endregion
+            #endregion
         }
 
         void AcquireIMAQThread()
@@ -1863,37 +2253,81 @@ namespace nOCT
                     break;
             }
 
-            #if TRUEIMAQ
+#if TRUEIMAQ
 
             // Initialize IMAQ from dll
-            string strinterfaceName0 = "img0";
+            string strinterfaceName0 = "img1";
             char[] pchinterfaceName0 = new char[64];
             pchinterfaceName0 = strinterfaceName0.ToCharArray();
-            string strinterfaceName1 = "img1";
+            string strinterfaceName1 = "img0";
             char[] pchinterfaceName1 = new char[64];
             pchinterfaceName1 = strinterfaceName1.ToCharArray();
             int errInfo = 0;
 
-            errInfo = nOCTimaqWrapper.InitializeImaq(pchinterfaceName0, pchinterfaceName1, UIData.nLLIMAQLineLength, UIData.nLLLinesPerChunk, errInfo);
-
-            // since the initialization of imaq sometimes fails, there is while loop to make the initialiazation successed 
-            while (errInfo < 0)
+            switch (UIData.nLLSystemType)
             {
-                nOCTimaqWrapper.StopAcquisition();
-                errInfo = 0;
-                errInfo = nOCTimaqWrapper.InitializeImaq(pchinterfaceName0, pchinterfaceName1, UIData.nLLIMAQLineLength, UIData.nLLLinesPerChunk, errInfo);
+                case 0: // SD-OCT
+                    #region SD-OCT
+
+                    errInfo = nOCTimaqWrapper_OneCam.InitializeImaq(pchinterfaceName0, UIData.nLLIMAQLineLength, UIData.nLLLinesPerChunk, errInfo);
+
+                    // since the initialization of imaq sometimes fails, there is while loop to make the initialiazation successed 
+                    while (errInfo < 0)
+                    {
+                        nOCTimaqWrapper_OneCam.StopAcquisition();
+                        errInfo = 0;
+                        errInfo = nOCTimaqWrapper_OneCam.InitializeImaq(pchinterfaceName0, UIData.nLLIMAQLineLength, UIData.nLLLinesPerChunk, errInfo);
+                    }
+
+                    if (errInfo < 0)
+                    {
+                        threadData.strAcquireIMAQThreadStatus = "F"; // status F meams Imaq Inialization failed
+                    }
+                    else
+                    {
+                        threadData.strAcquireIMAQThreadStatus = "r";
+                    }
+
+                    #endregion
+                    break;
+                case 1: // PS SD-OCT
+                    #region PS-SD-OCT
+
+
+                    errInfo = nOCTimaqWrapper_TwoCam.InitializeImaq(pchinterfaceName0, pchinterfaceName1, UIData.nLLIMAQLineLength, UIData.nLLLinesPerChunk, errInfo);
+
+                    // since the initialization of imaq sometimes fails, there is while loop to make the initialiazation successed 
+                    while (errInfo < 0)
+                    {
+                        nOCTimaqWrapper_TwoCam.StopAcquisition();
+                        errInfo = 0;
+                        errInfo = nOCTimaqWrapper_TwoCam.InitializeImaq(pchinterfaceName0, pchinterfaceName1, UIData.nLLIMAQLineLength, UIData.nLLLinesPerChunk, errInfo);
+                    }
+
+                    if (errInfo < 0)
+                    {
+                        threadData.strAcquireIMAQThreadStatus = "F"; // status F meams Imaq Inialization failed
+                    }
+                    else
+                    {
+                        threadData.strAcquireIMAQThreadStatus = "r";
+                    }
+                    #endregion
+                    break;
+                case 2: // line field
+
+                    break;
+                case 3: // OFDI
+
+                    break;
+                case 4: // PS OFDI
+
+                    break;
             }
 
-            if (errInfo < 0)
-            {
-                threadData.strAcquireIMAQThreadStatus = "F"; // status F meams Imaq Inialization failed
-            }
-            else
-            {
-                threadData.strAcquireIMAQThreadStatus = "r";
-            }
 
-            #endif  // TRUEIMAQ
+
+#endif  // TRUEIMAQ
 
             threadData.mreAcquireIMAQReady.Set();
             //threadData.strAcquireIMAQThreadStatus = "r";
@@ -1901,8 +2335,9 @@ namespace nOCT
 
             #region main loop
 
+
             //threadData.strAcquireIMAQThreadStatus = "s";
-            if ((WaitHandle.WaitAny(pweStart) == 1) ) //
+            if ((WaitHandle.WaitAny(pweStart) == 1)) //
             {
 
                 threadData.strAcquireIMAQThreadStatus = "g";
@@ -1910,8 +2345,26 @@ namespace nOCT
 #if TRUEIMAQ
 
                 // start acquisition call to dll
-                nOCTimaqWrapper.StartAcquisition();
-                //set event for camera sync               
+                switch (UIData.nLLSystemType)
+                {
+                    case 0: // SD-OCT
+                        nOCTimaqWrapper_OneCam.StartAcquisition();
+                        break;
+                    case 1: // PS SD-OCT
+                        nOCTimaqWrapper_TwoCam.StartAcquisition();
+                        break;
+                    case 2: // line field
+
+                        break;
+                    case 3: // OFDI
+
+                        break;
+                    case 4: // PS OFDI
+
+                        break;
+                }
+
+                //set event for camera sync            
 
                 threadData.mreCameraSync.Set();
 
@@ -1919,6 +2372,9 @@ namespace nOCT
                 int bufferIndex1 = 0;
                 int lostbuffers0 = 0;
                 int lostbuffers1 = 0;
+                int nCounter = 0;
+
+
 
 #endif  // TRUEIMAQ
 
@@ -1932,26 +2388,48 @@ namespace nOCT
                     if (nStatus == 1)
                     {
                         threadData.areAcquireIMAQGo.Set();
-//                        threadData.strAcquireIMAQThreadStatus = "G";
+                        //                        threadData.strAcquireIMAQThreadStatus = "G";
                         if (nMode > 0)
                         {
                             if (threadData.nSystemActual == 0)
                             {
-//                                threadData.strAcquireIMAQThreadStatus = "Wa";
+                                //                                threadData.strAcquireIMAQThreadStatus = "Wa";
 
 #if TRUEIMAQ
 
-                            
-                                for (int nChunk=0 ; nChunk<UIData.nLLChunksPerImage; nChunk++)
+                                switch (UIData.nLLSystemType)
                                 {
-                                    nOCTimaqWrapper.RealAcquisition(ref bufferIndex0, ref lostbuffers0, threadData.nodeAcquire.Value.pnIMAQParallel[nChunk], ref bufferIndex1, ref lostbuffers1, threadData.nodeAcquire.Value.pnIMAQPerpendicular[nChunk]);
-                                    //nOCTimaqWrapper.RealAcquisition1(bufferIndex1, threadData.nodeAcquire.Value.pnIMAQPerpendicular[nChunk]);
+                                    case 0: // SD-OCT
+                                        for (int nChunk = 0; nChunk < UIData.nLLChunksPerImage; nChunk++)
+                                        {
+                                            nOCTimaqWrapper_OneCam.RealAcquisition0(bufferIndex0, threadData.nodeAcquire.Value.pnIMAQParallel[nChunk], nCounter);
+                                            // nOCTimaqWrapper.RealAcquisition1(bufferIndex1, threadData.nodeAcquire.Value.pnIMAQPerpendicular[nChunk]);
+                                        }
+                                        break;
+                                    case 1: // PS SD-OCT
+                                        for (int nChunk = 0; nChunk < UIData.nLLChunksPerImage; nChunk++)
+                                        {
+                                            nOCTimaqWrapper_TwoCam.RealAcquisition(ref bufferIndex0, ref lostbuffers0, threadData.nodeAcquire.Value.pnIMAQParallel[nChunk], ref bufferIndex1, ref lostbuffers1, threadData.nodeAcquire.Value.pnIMAQPerpendicular[nChunk]);
+                                            //nOCTimaqWrapper.RealAcquisition1(bufferIndex1, threadData.nodeAcquire.Value.pnIMAQPerpendicular[nChunk]);
+                                        }
+                                        threadData.strAcquireIMAQThreadStatus = "bn" + lostbuffers0 + " " + lostbuffers1;
+                                        /* Begin: 20210414 editing by JL */
+                                        threadData.nodeAcquire.Value.nLostBuffer0 = lostbuffers0;
+                                        threadData.nodeAcquire.Value.nLostBuffer1 = lostbuffers1;
+                                        /* End: 20210414 editing by JL */
+                                        break;
+                                    case 2: // line field
+
+                                        break;
+                                    case 3: // OFDI
+
+                                        break;
+                                    case 4: // PS OFDI
+
+                                        break;
                                 }
-                                threadData.strAcquireIMAQThreadStatus = "bn" + lostbuffers0 + " " + lostbuffers1;
-                                /* Begin: 20210414 editing by JL */
-                                threadData.nodeAcquire.Value.nLostBuffer0 = lostbuffers0;
-                                threadData.nodeAcquire.Value.nLostBuffer1 = lostbuffers1;
-                                /* End: 20210414 editing by JL */
+
+
 
 #endif  // TRUEIMAQ
 
@@ -1964,23 +2442,23 @@ namespace nOCT
                                 switch (threadData.nodeAcquire.Value.nNodeID % 5)
                                 {
                                     case 0:
-//                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH1.bin");
+                                        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH1.bin");
                                         byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\calibration\\Parallel_20201223_PSOCT_Calibration_102561.bin");
                                         break;
                                     case 1:
-//                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH2.bin");
+                                        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH2.bin");
                                         byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\calibration\\Parallel_20201223_PSOCT_Calibration_102562.bin");
                                         break;
                                     case 2:
-//                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH3.bin");
+                                        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH3.bin");
                                         byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\calibration\\Parallel_20201223_PSOCT_Calibration_102563.bin");
                                         break;
                                     case 3:
-//                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH4.bin");
+                                        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH4.bin");
                                         byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\calibration\\Parallel_20201223_PSOCT_Calibration_102564.bin");
                                         break;
                                     case 4:
-//                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH5.bin");
+                                        //                                        byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdH5.bin");
                                         byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\calibration\\Parallel_20201223_PSOCT_Calibration_102565.bin");
                                         break;
                                 }
@@ -1996,7 +2474,7 @@ namespace nOCT
                                     switch (threadData.nodeAcquire.Value.nNodeID % 5)
                                     {
                                         case 0:
-//                                            byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdV1.bin");
+                                            //                                            byteBuffer = File.ReadAllBytes("C:\\Users\\hylep\\Desktop\\nOCT\\PSdata\\image\\pdV1.bin");
                                             byteBuffer = File.ReadAllBytes("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\nOCT 20210105\\PSdata\\calibration\\Perpendicular_20201223_PSOCT_Calibration_102561.bin");
                                             break;
                                         case 1:
@@ -2028,7 +2506,7 @@ namespace nOCT
                             }   // if (threadData.nSystemActual
                         }
                         threadData.areAcquireIMAQComplete.Set();
-//                        threadData.strAcquireIMAQThreadStatus = "D";
+                        //                        threadData.strAcquireIMAQThreadStatus = "D";
                     }
                     if (nStatus == WaitHandle.WaitTimeout)
                     {
@@ -2044,12 +2522,30 @@ namespace nOCT
 
             #region cleanup
 
-            #if TRUEIMAQ
+#if TRUEIMAQ
 
             //call functon to stop cameras and clean ring buffers stopacquisition
-            nOCTimaqWrapper.StopAcquisition();
+            switch (UIData.nLLSystemType)
+            {
+                case 0: // SD-OCT
+                    nOCTimaqWrapper_OneCam.StopAcquisition();
+                    break;
+                case 1: // PS SD-OCT
+                    nOCTimaqWrapper_TwoCam.StopAcquisition();
+                    break;
+                case 2: // line field
 
-            #endif  // TRUEIMAQ
+                    break;
+                case 3: // OFDI
+
+                    break;
+                case 4: // PS OFDI
+
+                    break;
+            }
+
+
+#endif  // TRUEIMAQ
 
 
             if (bTroublemaker)
@@ -2071,9 +2567,9 @@ namespace nOCT
 
         }
 
-        void SaveThread()   
+        void SaveThread()
         {
-#region initializing
+            #region initializing
             threadData.strSaveThreadStatus = "Initializing...";
 
             // initialization
@@ -2085,14 +2581,14 @@ namespace nOCT
             Thread.Sleep(1);
             string strTest;
             int nOffset1 = 4096;
-            int nOffset2; 
+            int nOffset2;
 
             // parameters for saving 
             UInt16[][] pnAlazar;
             double[] pnDAQ;
-            Int16[] pnIMAQ; 
+            Int16[] pnIMAQ;
             Int16[] pnIMAQParallel;
-            Int16[] pnIMAQPerpendicular;            
+            Int16[] pnIMAQPerpendicular;
 
             int nNumberChunks, nLinesPerChunk, nLineLength, nChannels;
             nNumberChunks = UIData.nLLChunksPerImage;
@@ -2117,7 +2613,7 @@ namespace nOCT
                     break;
                 case 1: // PS-SD-OCT
                     Array.Clear(pnIMAQParallel, 0, pnIMAQParallel.Length);
-                    Array.Clear(pnIMAQPerpendicular, 0, pnIMAQParallel.Length);                    
+                    Array.Clear(pnIMAQPerpendicular, 0, pnIMAQParallel.Length);
                     break;
                 case 2: // line field
 
@@ -2161,9 +2657,9 @@ namespace nOCT
             // initialization complete
             threadData.mreSaveReady.Set();
             threadData.strSaveThreadStatus = "Ready!";
-#endregion
+            #endregion
 
-#region main loop
+            #region main loop
             threadData.strSaveThreadStatus = "Set...";
             if (WaitHandle.WaitAny(pweStart) == 1)
             {
@@ -2179,7 +2675,7 @@ namespace nOCT
                         if (nodeSave.Value.nAcquired > 0)
                         {
                             /* Begin: 20201208 editing by JL */
-                            threadData.nSaveNodeID = nodeSave.Value.nNodeID;                            
+                            threadData.nSaveNodeID = nodeSave.Value.nNodeID;
                             if (nodeSave.Value.bRecord)
                             {
                                 // actual save
@@ -2190,7 +2686,7 @@ namespace nOCT
 
                                 // general header info
                                 fs.Seek(0, SeekOrigin.Begin);
-                                strTest = nodeSave.Value.strFilename;                   binWriter.Write(strTest.Length);    binWriter.Write(strTest);
+                                strTest = nodeSave.Value.strFilename; binWriter.Write(strTest.Length); binWriter.Write(strTest);
                                 strTest = "strDateTime='" + nodeSave.Value.strDateTime + "';"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
                                 /* End: 20210414 editing by JL */
 
@@ -2199,29 +2695,29 @@ namespace nOCT
                                 {
                                     case 0: // SD-OCT
                                         /* Begin: 20210414 editing by JL */
-                                        strTest = "strSysType='SD-OCT';";                binWriter.Write(strTest.Length);    binWriter.Write(strTest);
+                                        strTest = "strSysType='SD-OCT';"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
                                         /* End: 20210414 editing by JL */
                                         strTest = "nFrameNumber=" + nodeSave.Value.nFramePosition + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
-                                        strTest = "nNumberDataArrays=" + 2 + ";";       binWriter.Write(strTest.Length);    binWriter.Write(strTest);
+                                        strTest = "nNumberDataArrays=" + 2 + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
 
                                         // header array 1: IMAQ data (parallel and perpendicular)
-                                        strTest = "strVar='pdIMAQ';";                   binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "nOffset=" + nOffset1 + ";";          binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "nNumberLines=" + nNumberLines + ";"; binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "nLineLength=" + nLineLength + ";";   binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "strDataType='int16';";               binWriter.Write(strTest.Length);    binWriter.Write(strTest);
+                                        strTest = "strVar='pdIMAQ';"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "nOffset=" + nOffset1 + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "nNumberLines=" + nNumberLines + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "nLineLength=" + nLineLength + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "strDataType='int16';"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
                                         /* Begin: 20210414 editing by JL */
-                                        strTest = "nLostBuffer0=" + nodeSave.Value.nLostBuffer0 + ";";  binWriter.Write(strTest.Length);    binWriter.Write(strTest);
+                                        strTest = "nLostBuffer0=" + nodeSave.Value.nLostBuffer0 + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
                                         strTest = "nLostBuffer1=NaN;"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
                                         /* End: 20210414 editing by JL */
 
                                         // header array 2: DAQ data
                                         nOffset2 = nOffset1 + nNumberLines * nLineLength * sizeof(Int16);   // two cameras
-                                        strTest = "strVar='pdDAQ';";                    binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "nOffset=" + nOffset2 + ";";          binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "nNumberLines=" + 4 + ";";            binWriter.Write(strTest.Length);    binWriter.Write(strTest);     // Need double check
-                                        strTest = "nLineLength=" + nLineLength + ";";   binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "strDataType='double';";              binWriter.Write(strTest.Length);    binWriter.Write(strTest);
+                                        strTest = "strVar='pdDAQ';"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "nOffset=" + nOffset2 + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "nNumberLines=" + 4 + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);     // Need double check
+                                        strTest = "nLineLength=" + nLineLength + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "strDataType='double';"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
 
                                         strTest = "END"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
 
@@ -2229,7 +2725,7 @@ namespace nOCT
                                         fs.Seek(nOffset1, SeekOrigin.Begin);
 
                                         for (int nChunk = 0; nChunk < nNumberChunks; nChunk++)
-                                            Array.Copy(nodeSave.Value.pnIMAQ[nChunk], 0, pnIMAQ, nChunk * nLinesPerChunk * nLineLength, nLinesPerChunk * nLineLength);                                          
+                                            Array.Copy(nodeSave.Value.pnIMAQParallel[nChunk], 0, pnIMAQ, nChunk * nLinesPerChunk * nLineLength, nLinesPerChunk * nLineLength);
 
                                         for (int nLine = 0; nLine < nNumberLines; nLine++)
                                             for (int nPoint = 0; nPoint < nLineLength; nPoint++)
@@ -2240,15 +2736,15 @@ namespace nOCT
                                         /* Begin: 20210414 editing by JL */
                                         strTest = "strSysType='PS-SD-OCT';"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
                                         /* End: 20210414 editing by JL */
-                                        strTest = "nFrameNumber=" + nodeSave.Value.nFramePosition + ";";    binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "nNumberDataArrays=" + 2 + ";";       binWriter.Write(strTest.Length);    binWriter.Write(strTest);
+                                        strTest = "nFrameNumber=" + nodeSave.Value.nFramePosition + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "nNumberDataArrays=" + 2 + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
 
                                         // header array 1: IMAQ data (parallel and perpendicular)
-                                        strTest = "strVar='pdIMAQ';";                   binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "nOffset=" + nOffset1 + ";";          binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "nNumberLines=" + nNumberLines + ";"; binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "nLineLength=" + nLineLength + ";";   binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "strDataType='int16';";               binWriter.Write(strTest.Length);    binWriter.Write(strTest);
+                                        strTest = "strVar='pdIMAQ';"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "nOffset=" + nOffset1 + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "nNumberLines=" + nNumberLines + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "nLineLength=" + nLineLength + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "strDataType='int16';"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
                                         /* Begin: 20210414 editing by JL */
                                         strTest = "nLostBuffer0=" + nodeSave.Value.nLostBuffer0 + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
                                         strTest = "nLostBuffer1=" + nodeSave.Value.nLostBuffer1 + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
@@ -2256,13 +2752,13 @@ namespace nOCT
 
                                         // header array 2: DAQ data
                                         nOffset2 = nOffset1 + 2 * nNumberLines * nLineLength * sizeof(Int16);   // two cameras
-                                        strTest = "strVar='pdDAQ';";                    binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "nOffset=" + nOffset2 + ";";          binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "nNumberLines=" + 4 + ";";            binWriter.Write(strTest.Length);    binWriter.Write(strTest);     // Need double check
-                                        strTest = "nLineLength=" + nLineLength + ";";   binWriter.Write(strTest.Length);    binWriter.Write(strTest);
-                                        strTest = "strDataType='double';";              binWriter.Write(strTest.Length);    binWriter.Write(strTest);
+                                        strTest = "strVar='pdDAQ';"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "nOffset=" + nOffset2 + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "nNumberLines=" + 4 + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);     // Need double check
+                                        strTest = "nLineLength=" + nLineLength + ";"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
+                                        strTest = "strDataType='double';"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
 
-                                        strTest = "END"; binWriter.Write(strTest.Length);    binWriter.Write(strTest);
+                                        strTest = "END"; binWriter.Write(strTest.Length); binWriter.Write(strTest);
 
                                         // save array 1: IMAQ data (parallel and perpendicular)
                                         fs.Seek(nOffset1, SeekOrigin.Begin);
@@ -2272,29 +2768,29 @@ namespace nOCT
                                             Array.Copy(nodeSave.Value.pnIMAQParallel[nChunk], 0, pnIMAQParallel, nChunk * nLinesPerChunk * nLineLength, nLinesPerChunk * nLineLength);
                                             Array.Copy(nodeSave.Value.pnIMAQPerpendicular[nChunk], 0, pnIMAQPerpendicular, nChunk * nLinesPerChunk * nLineLength, nLinesPerChunk * nLineLength);
 
-                                        }   
-                                        for(int nLine = 0; nLine < nNumberLines; nLine++)
+                                        }
+                                        for (int nLine = 0; nLine < nNumberLines; nLine++)
                                         {
                                             for (int nPoint = 0; nPoint < nLineLength; nPoint++)
                                             {
                                                 binWriter.Write(pnIMAQParallel[nLine * nLineLength + nPoint]);
                                                 binWriter.Write(pnIMAQPerpendicular[nLine * nLineLength + nPoint]);
                                             }
-                                        } 
+                                        }
 
                                         break;
                                     case 2: // line field
 
                                         break;
                                     case 3: // OFDI (pgreg002 here is a section to see how the arrays are defined in each node
-                                        
+
                                         break;
                                     case 4: // PS-OFDI
 
                                         break;
                                 } // switch (UIData.nLLSystemType)
 
-                                fs.Close();                              
+                                fs.Close();
 
                                 nodeSave.Value.nSaved = 1;
 
@@ -2333,25 +2829,25 @@ namespace nOCT
                     }  // if (nodeSave.Value.rwls.TryEnterReadLock
                 }  // while (WaitHandle.WaitAny
             }  // if (WaitHandle.WaitAny
-#endregion
+            #endregion
 
-#region cleanup
+            #region cleanup
             if (bTroublemaker)
             {
                 threadData.mreSaveDead.Set();
             }
             else
             {  // if (bTroublemaker
-#region cleanup
+                #region cleanup
                 threadData.strSaveThreadStatus = "Cleaning up...";
                 // clean up code
                 ;
                 // signal other threads
                 threadData.mreSaveDead.Set();
                 threadData.strSaveThreadStatus = "Done.";
-#endregion
+                #endregion
             }  // if (bTroublemaker
-#endregion
+            #endregion
 
         }   // void SaveThread
 
@@ -2459,7 +2955,7 @@ namespace nOCT
                                         for (int nChunk = 0; nChunk < UIData.nLLChunksPerImage; nChunk++)
                                         {
                                             // copy parallel in order
-                                            Array.Copy(nodeProcess.Value.pnIMAQParallel[nChunk], 0, threadData.pfProcess1IMAQParallel, nChunk * UIData.nLLLinesPerChunk * threadData.nRawAlineLength,  UIData.nLLLinesPerChunk * threadData.nRawAlineLength);
+                                            Array.Copy(nodeProcess.Value.pnIMAQParallel[nChunk], 0, threadData.pfProcess1IMAQParallel, nChunk * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, UIData.nLLLinesPerChunk * threadData.nRawAlineLength);
                                             // copy and flip perpendicular camera
                                             for (nAline = 0; nAline < UIData.nLLLinesPerChunk; nAline++)
                                             {
@@ -2478,9 +2974,9 @@ namespace nOCT
                                         Buffer.BlockCopy(nodeProcess.Value.pfDAQ, 0, threadData.pfProcess1DAQ, 0, nodeProcess.Value.pfDAQ.Length);
                                         for (int nChunk = 0; nChunk < UIData.nLLChunksPerImage; nChunk++)
                                         {
-//                                            Buffer.BlockCopy(nodeProcess.Value.pnAlazar[nChunk], 0, threadData.pnProcess1Alazar, nChunk * 2 * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnAlazar[nChunk].Length);
+                                            //                                            Buffer.BlockCopy(nodeProcess.Value.pnAlazar[nChunk], 0, threadData.pnProcess1Alazar, nChunk * 2 * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnAlazar[nChunk].Length);
                                             Buffer.BlockCopy(nodeProcess.Value.pnIMAQParallel[nChunk], 0, threadData.pfProcess1IMAQParallel, nChunk * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnIMAQParallel[nChunk].Length);
-//                                            Buffer.BlockCopy(nodeProcess.Value.pnIMAQPerpendicular[nChunk], 0, threadData.pnProcess1IMAQPerpendicular, nChunk * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnIMAQPerpendicular[nChunk].Length);
+                                            //                                            Buffer.BlockCopy(nodeProcess.Value.pnIMAQPerpendicular[nChunk], 0, threadData.pnProcess1IMAQPerpendicular, nChunk * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnIMAQPerpendicular[nChunk].Length);
                                         }   // for (int nChunk
                                     }   // if (UIData.nLLChunksPerImage
                                     break;
@@ -2491,8 +2987,8 @@ namespace nOCT
                                         for (int nChunk = 0; nChunk < UIData.nLLChunksPerImage; nChunk++)
                                         {
                                             Buffer.BlockCopy(nodeProcess.Value.pnAlazar[nChunk], 0, threadData.pnProcess1Alazar, nChunk * 2 * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnAlazar[nChunk].Length);
-//                                            Buffer.BlockCopy(nodeProcess.Value.pnIMAQParallel[nChunk], 0, threadData.pnProcess1IMAQParallel, nChunk * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnIMAQParallel[nChunk].Length);
-//                                            Buffer.BlockCopy(nodeProcess.Value.pnIMAQPerpendicular[nChunk], 0, threadData.pnProcess1IMAQPerpendicular, nChunk * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnIMAQPerpendicular[nChunk].Length);
+                                            //                                            Buffer.BlockCopy(nodeProcess.Value.pnIMAQParallel[nChunk], 0, threadData.pnProcess1IMAQParallel, nChunk * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnIMAQParallel[nChunk].Length);
+                                            //                                            Buffer.BlockCopy(nodeProcess.Value.pnIMAQPerpendicular[nChunk], 0, threadData.pnProcess1IMAQPerpendicular, nChunk * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnIMAQPerpendicular[nChunk].Length);
                                         }   // for (int nChunk
                                     }   // if (UIData.nLLChunksPerImage
                                     break;
@@ -2503,8 +2999,8 @@ namespace nOCT
                                         for (int nChunk = 0; nChunk < UIData.nLLChunksPerImage; nChunk++)
                                         {
                                             Buffer.BlockCopy(nodeProcess.Value.pnAlazar[nChunk], 0, threadData.pnProcess1Alazar, nChunk * 2 * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnAlazar[nChunk].Length);
-//                                            Buffer.BlockCopy(nodeProcess.Value.pnIMAQParallel[nChunk], 0, threadData.pnProcess1IMAQParallel, nChunk * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnIMAQParallel[nChunk].Length);
-//                                            Buffer.BlockCopy(nodeProcess.Value.pnIMAQPerpendicular[nChunk], 0, threadData.pnProcess1IMAQPerpendicular, nChunk * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnIMAQPerpendicular[nChunk].Length);
+                                            //                                            Buffer.BlockCopy(nodeProcess.Value.pnIMAQParallel[nChunk], 0, threadData.pnProcess1IMAQParallel, nChunk * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnIMAQParallel[nChunk].Length);
+                                            //                                            Buffer.BlockCopy(nodeProcess.Value.pnIMAQPerpendicular[nChunk], 0, threadData.pnProcess1IMAQPerpendicular, nChunk * UIData.nLLLinesPerChunk * threadData.nRawAlineLength, nodeProcess.Value.pnIMAQPerpendicular[nChunk].Length);
                                         }   // for (int nChunk
                                     }   // if (UIData.nLLChunksPerImage
                                     break;
@@ -2544,6 +3040,7 @@ namespace nOCT
                                                 if (nAline >= threadData.nRawNumberAlines) nAline = threadData.nRawNumberAlines - 1;
                                                 for (nPoint = 0; nPoint < threadData.nRawAlineLength; nPoint++)
                                                     UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
+                                                    
                                                 #endregion
                                                 #region top
                                                 nPoint = UIData.nULTop;
@@ -2567,14 +3064,14 @@ namespace nOCT
                                                             for (nPoint = 0; nPoint < threadData.nRawAlineLength; nPoint++)
                                                                 UIData.pfULImage[nAlinePoint, nPoint] = -1f;
                                                         }   // for (nAline
-                                                        for (nAline=2; nAline<threadData.nRawNumberAlines; nAline++)
+                                                        for (nAline = 2; nAline < threadData.nRawNumberAlines; nAline++)
                                                         {
                                                             nChunkPoint = nAline * threadData.nRawAlineLength;
                                                             if (nAline % 2 == 0)
                                                                 nAlinePoint = nAline >> 1;
                                                             else
                                                                 nAlinePoint = (nAline >> 1) + (threadData.nRawNumberAlines >> 1);
-                                                            for (nPoint=0; nPoint < threadData.nRawAlineLength; nPoint++)
+                                                            for (nPoint = 0; nPoint < threadData.nRawAlineLength; nPoint++)
                                                                 UIData.pfULImage[nAlinePoint, nPoint] = threadData.pfProcess1IMAQParallel[nChunkPoint + nPoint];
                                                         }   // for (nAline
                                                         break;
@@ -2661,8 +3158,8 @@ namespace nOCT
                                                         {
                                                             UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
                                                             UIData.pfULLeft[1, nPoint] = UIData.pfULImage[nAline + (threadData.nRawNumberAlines >> 2), nPoint];
-                                                            UIData.pfULLeft[2, nPoint] = UIData.pfULImage[nAline + 2*(threadData.nRawNumberAlines >> 2), nPoint];
-                                                            UIData.pfULLeft[3, nPoint] = UIData.pfULImage[nAline + 3*(threadData.nRawNumberAlines >> 2), nPoint];
+                                                            UIData.pfULLeft[2, nPoint] = UIData.pfULImage[nAline + 2 * (threadData.nRawNumberAlines >> 2), nPoint];
+                                                            UIData.pfULLeft[3, nPoint] = UIData.pfULImage[nAline + 3 * (threadData.nRawNumberAlines >> 2), nPoint];
                                                         }
                                                         break;
                                                 }   // switch (UIData.nULIMAQCameraIndex
@@ -2770,9 +3267,9 @@ namespace nOCT
                 pcdFFT = NationalInstruments.Analysis.Dsp.Transforms.RealFft(pdLine);
                 #endregion forward fft
                 #region multiply mask and copy depth profile graph lines
-                for (nPoint=0; nPoint<nLineLength >> 1; nPoint++)
+                for (nPoint = 0; nPoint < nLineLength >> 1; nPoint++)
                 {
-                    pfDepthProfile[(2 * nLine + 0) * (nLineLength >> 1) + nPoint] = (float) (20.0*Math.Log10(pcdFFT[nPoint].Magnitude));
+                    pfDepthProfile[(2 * nLine + 0) * (nLineLength >> 1) + nPoint] = (float)(20.0 * Math.Log10(pcdFFT[nPoint].Magnitude));
                     pcdFFT[nPoint].Real = pcdFFT[nPoint].Real * pfMask[nPoint];
                     pcdFFT[nPoint].Imaginary = pcdFFT[nPoint].Imaginary * pfMask[nPoint];
                     pfDepthProfile[(2 * nLine + 1) * (nLineLength >> 1) + nPoint] = (float)(20.0 * Math.Log10(pcdFFT[nPoint].Magnitude));
@@ -2825,7 +3322,7 @@ namespace nOCT
                 dRightSum += pdLine[nRight];
                 #endregion clip end points
                 #region copy to phase plot lines
-                for (nPoint=0; nPoint < nLineLength; nPoint++)
+                for (nPoint = 0; nPoint < nLineLength; nPoint++)
                     pfPhase[nLine * nLineLength + nPoint] = (float)(pdLine[nPoint]);
                 #endregion copy to phase plot lines
             }   // for (nLine
@@ -2837,9 +3334,10 @@ namespace nOCT
             dOffset = dLeftSum - dSlope * nLeft;
             #endregion
             #region calculate fit line and copy to graph line
-            for (nPoint = 0; nPoint < nLineLength; nPoint++) {
+            for (nPoint = 0; nPoint < nLineLength; nPoint++)
+            {
                 pdFitLine[nPoint] = dSlope * nPoint + dOffset;
-                pfPhase[nNumberLines * nLineLength + nPoint] = (float) pdFitLine[nPoint];
+                pfPhase[nNumberLines * nLineLength + nPoint] = (float)pdFitLine[nPoint];
             }   // for (nPoint
             #endregion
 
@@ -2847,7 +3345,7 @@ namespace nOCT
             {
                 #region initial k assignment
                 Array.Clear(pnAssigned, 0, nLineLength);
-                for (nPoint=0; nPoint < nLineLength; nPoint++)
+                for (nPoint = 0; nPoint < nLineLength; nPoint++)
                 {
                     dTemp = (pfPhase[nLine * nLineLength + nPoint] - dOffset) / dSlope;
                     pfK[nLine * nLineLength + nPoint] = (float)dTemp;
@@ -2863,7 +3361,7 @@ namespace nOCT
                 #region examine any initial unassigned points
                 nPoint = 0;
                 nTemp = 0;
-                while ((pnAssigned[nPoint] == 0) && (nPoint < nLineLength-1))
+                while ((pnAssigned[nPoint] == 0) && (nPoint < nLineLength - 1))
                 {
                     while ((nPoint >= pfK[nLine * nLineLength + nTemp + 1]) && (nTemp < nLineLength - 1))
                         nTemp++;
@@ -2911,9 +3409,9 @@ namespace nOCT
         {
             int nLine, nPoint, nLineLength = pfK.Length / nNumberLines;
             int nIndex;
-            for (nLine=0; nLine<nNumberLines; nLine++)
+            for (nLine = 0; nLine < nNumberLines; nLine++)
             {
-                for (nPoint=0; nPoint<nLineLength; nPoint++)
+                for (nPoint = 0; nPoint < nLineLength; nPoint++)
                 {
                     nIndex = nPoint - 2;
                     if (nIndex < 0)
@@ -2994,10 +3492,10 @@ namespace nOCT
                            + fx3_3 * ((fx1_2 * fx2 * fy4 + fx2_2 * fx4 * fy1 + fx4_2 * fx1 * fy2) - (fx1_2 * fx4 * fy2 + fx2_2 * fx1 * fy4 + fx4_2 * fx2 * fy1))
                            - fx4_3 * ((fx1_2 * fx2 * fy3 + fx3_2 * fx1 * fy2 + fx2_2 * fx3 * fy1) - (fx1_2 * fx3 * fy2 + fx2_2 * fx1 * fy3 + fx3_2 * fx2 * fy1));
 
-                        f0 = fx1_3 * ((fx2_2 * fx3       + fx3_2 * fx4       + fx4_2 * fx2      ) - (fx2_2 * fx4       + fx3_2 * fx2       + fx4_2 * fx3      ))
-                           - fx2_3 * ((fx1_2 * fx3       + fx3_2 * fx4       + fx4_2 * fx1      ) - (fx1_2 * fx4       + fx3_2 * fx1       + fx4_2 * fx3      ))
-                           + fx3_3 * ((fx1_2 * fx2       + fx2_2 * fx4       + fx4_2 * fx1      ) - (fx1_2 * fx4       + fx2_2 * fx1       + fx4_2 * fx2      ))
-                           - fx4_3 * ((fx1_2 * fx2       + fx3_2 * fx1       + fx2_2 * fx3      ) - (fx1_2 * fx3       + fx2_2 * fx1       + fx3_2 * fx2      ));
+                        f0 = fx1_3 * ((fx2_2 * fx3 + fx3_2 * fx4 + fx4_2 * fx2) - (fx2_2 * fx4 + fx3_2 * fx2 + fx4_2 * fx3))
+                           - fx2_3 * ((fx1_2 * fx3 + fx3_2 * fx4 + fx4_2 * fx1) - (fx1_2 * fx4 + fx3_2 * fx1 + fx4_2 * fx3))
+                           + fx3_3 * ((fx1_2 * fx2 + fx2_2 * fx4 + fx4_2 * fx1) - (fx1_2 * fx4 + fx2_2 * fx1 + fx4_2 * fx2))
+                           - fx4_3 * ((fx1_2 * fx2 + fx3_2 * fx1 + fx2_2 * fx3) - (fx1_2 * fx3 + fx2_2 * fx1 + fx3_2 * fx2));
                         #endregion
 
                         pfOCT[nLineOffset + nPoint] = (float)(f4 / f0);
@@ -3015,7 +3513,7 @@ namespace nOCT
             float[] pfLineR = new float[nLineLength];
             float[] pfLineI = new float[nLineLength];
             int nLine, nNumberLines = pfOCT.Length / nLineLength;
-            for (nLine=0; nLine<nNumberLines; nLine++)
+            for (nLine = 0; nLine < nNumberLines; nLine++)
             {
                 Buffer.BlockCopy(pfOCT, nLine * nLineLength * sizeof(float), pfLine, 0, nLineLength * sizeof(float));
                 for (nPoint = 0; nPoint < nLineLength; nPoint++)
@@ -3036,10 +3534,10 @@ namespace nOCT
             ComplexDouble[] pcdSpectrum = new ComplexDouble[nLineLength];
             ComplexDouble[] pcdDepthProfile = new ComplexDouble[nLineLength];
 
-            for (nLine=0; nLine<nNumberLines; nLine++)
+            for (nLine = 0; nLine < nNumberLines; nLine++)
             {
                 #region assemble complex line from pfR and pfI arrays
-                for (nPoint=0; nPoint<nLineLength; nPoint++)
+                for (nPoint = 0; nPoint < nLineLength; nPoint++)
                 {
                     nIndex = nLine * nLineLength + nPoint;
                     pcdSpectrum[nPoint].Real = pfMask[nPoint] * pfR[nIndex];
@@ -3055,15 +3553,15 @@ namespace nOCT
                 for (nPoint = 0; nPoint < nLineLength; nPoint++)
                 {
                     nIndex = nLine * nLineLength + nPoint;
-                    pfR[nIndex] = (float) pcdDepthProfile[nPoint].Real;
-                    pfI[nIndex] = (float) pcdDepthProfile[nPoint].Imaginary;
+                    pfR[nIndex] = (float)pcdDepthProfile[nPoint].Real;
+                    pfI[nIndex] = (float)pcdDepthProfile[nPoint].Imaginary;
                 }   // for (nPoint
                 #endregion
             }   // for (nLine
         }
 
 
-        void loadCalibration(string strFilename, int nNumberCalibrationLines, int nNumberOCTLinesPerCalibration, int nRawAlineLength, ref float[]pfK, ref int[] pnIndex)
+        void loadCalibration(string strFilename, int nNumberCalibrationLines, int nNumberOCTLinesPerCalibration, int nRawAlineLength, ref float[] pfK, ref int[] pnIndex)
         {
             try
             {
@@ -3151,7 +3649,7 @@ namespace nOCT
         }   // clearDispersion
 
 
-        void calculateDispersion(float[] pfData, float[] pfFFTMask, float[] pfMask, ref float[] pfDepthProfile, int nLeft, int nRight, ref float[] pfSpectrum, ref float[]pfPhase, ref float[] pfDispersionR, ref float[] pfDispersionI)
+        void calculateDispersion(float[] pfData, float[] pfFFTMask, float[] pfMask, ref float[] pfDepthProfile, int nLeft, int nRight, ref float[] pfSpectrum, ref float[] pfPhase, ref float[] pfDispersionR, ref float[] pfDispersionI)
         {
             int nPoint, nLineLength = pfMask.Length;
             double[] pdLine = new double[nLineLength];
@@ -3365,6 +3863,176 @@ namespace nOCT
             fileStream.Close();
 
         }
+
+
+        /* Begin: 20211212 editing by JL */
+        void processElastography(float[,] pfdB, ref float[,] pfdBDiff, ref float[,] pfdBEven, ref float[,] pfdBOdd)
+        {
+            int nPoint, nLine, nEvenLine, nOddLine;
+            int nProcessedNumberLines = pfdB.GetLength(0); // threadData.nProcessedNumberAlines;
+            int nProcessedLineLength = pfdB.GetLength(1);  // threadData.nProcessedAlineLength;
+            float[,] pfdBEvenSmooth = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            float[,] pfdBOddSmooth = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            pfdBDiff = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            pfdBEven = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            pfdBOdd = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+
+            // construct odd and even lines images
+            for (nLine = 0; nLine < nProcessedNumberLines >> 1; nLine++)
+            {
+                nEvenLine = 2 * nLine;
+                nOddLine = 2 * nLine + 1;
+                for (nPoint = 0; nPoint < nProcessedLineLength; nPoint++)
+                {
+                    pfdBEven[nLine, nPoint] = pfdB[nEvenLine, nPoint];
+                    pfdBOdd[nLine, nPoint] = pfdB[nOddLine, nPoint];
+                }
+            }
+
+            // smooth the odd and even images 
+            int[] nKernelSize = new int[] { 9, 9 };
+            smoothImageWithBoxFilter(pfdBEven, nKernelSize, ref pfdBEven);
+            smoothImageWithBoxFilter(pfdBOdd, nKernelSize, ref pfdBOdd);
+
+            // calculate dB difference 
+            for (nLine = 0; nLine < nProcessedNumberLines >> 1; nLine++)
+            {
+                for (nPoint = 0; nPoint < nProcessedLineLength; nPoint++)
+                    pfdBDiff[nLine, nPoint] = Math.Abs(pfdBEven[nLine, nPoint] - pfdBOdd[nLine, nPoint]);
+            }
+
+
+
+        }
+
+        void smoothImageWithBoxFilter(float[,] pfImage, int[] nKernelSize, ref float[,] pfSmoothImage)
+        {
+            int nKernelSizeX = nKernelSize[0];
+            int nKernelSizeY = nKernelSize[1];
+            int nX, nY, nKernelX, nKernelY, nPoint;
+            int nImgWidth = pfImage.GetLength(0);
+            int nImgHeight = pfImage.GetLength(1);
+            float fPixel;
+
+            float fAvgFactorX = (float)(1.0 / (float)nKernelSizeX);
+            float fAvgFactorY = (float)(1.0 / (float)nKernelSizeY);
+
+            float[,] pfSmoothTemp = new float[nImgWidth, nImgHeight];
+            pfSmoothImage = new float[nImgWidth, nImgHeight];
+
+            if (nKernelSizeX > 2)
+            {
+                // horizontal (X) motion blur
+                for (nY = 0; nY < nImgHeight; nY++)
+                {
+                    for (nX = 0; nX < nImgWidth; nX++)
+                    {
+                        float fSum = 0.0f;
+                        if (nX == 0) // the first pixel
+                        {
+                            for (nKernelX = (int)(-nKernelSizeX / 2); nKernelX < (int)(nKernelSizeX / 2 + 1); nKernelX++)
+                            {
+                                nPoint = nX + nKernelX;
+                                if (nPoint < 0) // if the kernel includes points beyond the left edge of image (replicate the edge)
+                                    fPixel = pfImage[0, nY];
+                                else
+                                    fPixel = pfImage[nPoint, nY];
+
+                                fSum += fPixel;
+                            } // for (nKernelX = (int)(-nKernelSizeX / 2); nKernelX < (int)(nKernelSizeX / 2 + 1); nKernelX++)
+                            pfSmoothTemp[nX, nY] = fSum * fAvgFactorX;
+
+                        } // if (nX == 0) // the first pixel
+                        else // the rest pixels
+                        {
+                            fSum = pfSmoothTemp[nX - 1, nY] / fAvgFactorX;
+                            // left-most point in the kernel
+                            nPoint = nX + (int)(-nKernelSizeX / 2);
+                            if (nPoint < 0) // if the kernel includes points beyond the left edge of image (replicate the edge)
+                                fPixel = pfImage[0, nY];
+                            else
+                                fPixel = pfImage[nPoint, nY];
+
+                            fSum -= fPixel;
+
+                            // right-most point in the kernel
+                            nPoint = nX + (int)(nKernelSizeX / 2);
+                            if (nPoint > nImgWidth - 1) // if the kernel includes points beyond the right edge of image (replicate the edge)
+                                fPixel = pfImage[nImgWidth - 1, nY];
+                            else
+                                fPixel = pfImage[nPoint, nY];
+
+                            fSum += fPixel;
+
+                            pfSmoothTemp[nX, nY] = fSum * fAvgFactorX;
+                        } // if (nX == 0) // the first pixel
+
+                    } // for (nX = 0; nX < nImgWidth; nX++)
+                } // for (nY = 0; nY < nImgHeight; nY++)
+            } // if (nKernelSizeX > 2)
+            else
+            {
+                Buffer.BlockCopy(pfImage, 0, pfSmoothTemp, 0, nImgWidth * nImgHeight * sizeof(float));
+            } // if (nKernelSizeX > 2)
+
+
+            if (nKernelSizeY > 2)
+            {
+                // vertical (Y) motion blur
+                for (nX = 0; nX < nImgWidth; nX++)
+                {
+                    for (nY = 0; nY < nImgHeight; nY++)
+                    {
+                        float fSum = 0.0f;
+                        if (nY == 0) // the first pixel
+                        {
+                            for (nKernelY = (int)(-nKernelSizeY / 2); nKernelY < (int)(nKernelSizeY / 2 + 1); nKernelY++)
+                            {
+                                nPoint = nY + nKernelY;
+                                if (nPoint < 0) // if the kernel includes points beyond the top edge of image (replicate the edge)
+                                    fPixel = pfSmoothTemp[nX, 0];
+                                else
+                                    fPixel = pfSmoothTemp[nX, nPoint];
+
+                                fSum += fPixel;
+                            } // for (nKernelY = (int)(-nKernelSizeY / 2); nKernelY < (int)(nKernelSizeY / 2 + 1); nKernelY++)
+                            pfSmoothImage[nX, nY] = fSum * fAvgFactorY;
+
+                        } // if (nY == 0) // the first pixel
+                        else
+                        {
+                            fSum = pfSmoothImage[nX, nY - 1] / fAvgFactorY;
+                            // up-most point in the kernel
+                            nPoint = nY + (int)(-nKernelSizeY / 2);
+                            if (nPoint < 0) // if the kernel includes points beyond the up edge of image (replicate the edge)
+                                fPixel = pfSmoothTemp[nX, 0];
+                            else
+                                fPixel = pfSmoothTemp[nX, nPoint];
+
+                            fSum -= fPixel;
+
+                            // bottom-most point in the kernel
+                            nPoint = nY + (int)(nKernelSizeY / 2);
+                            if (nPoint > nImgHeight - 1) // if the kernel includes points beyond the bottom edge of image (replicate the edge)
+                                fPixel = pfSmoothTemp[nX, nImgHeight - 1];
+                            else
+                                fPixel = pfSmoothTemp[nX, nPoint];
+
+                            fSum += fPixel;
+
+                            pfSmoothImage[nX, nY] = fSum * fAvgFactorY;
+
+                        } // if (nY == 0) // the first pixel
+                    } // for (nY = 0; nY < nImgHeight; nY++)
+                } // for (nX = 0; nX < nImgWidth; nX++)
+            } // if (nKernelSizeY > 2)
+            else
+            {
+                Buffer.BlockCopy(pfSmoothTemp, 0, pfSmoothImage, 0, nImgWidth * nImgHeight * sizeof(float));
+            } // if (nKernelSizeY > 2)
+
+        }
+        /* End: 20211212 editing by JL */
 
 
         void Process1Thread()
@@ -3902,15 +4570,15 @@ namespace nOCT
                                     calculateCalibration(nNumberSets, pfCalibrationData, pfCalibrationMask, ref pfCalibrationDepthProfile, nCalibrationPhaseLeft, nCalibrationPhaseRight, ref pfCalibrationSpectrum, ref pfCalibrationPhase, ref pfK, ref pnIndex);
                                     break;
                                 case 1:  // IPP
-                                    #if TRUEIPP
+#if TRUEIPP
                                     // call ipp function
                                     Array.Clear(pfCalibrationDepthProfile, 0, pfCalibrationDepthProfile.Length);
-                                    #endif  // TRUEIPP
+#endif  // TRUEIPP
                                     break;
                                 case 2:  // CUDA
-                                    #if TRUECUDA
+#if TRUECUDA
                                     Array.Clear(pfCalibrationDepthProfile, 0, pfCalibrationDepthProfile.Length);
-                                    #endif  // TRUECUDA
+#endif  // TRUECUDA
                                     break;
                             }  // switch (threadData.nProcess1ProcessingType
                             #endregion  // calculate calibration
@@ -3967,16 +4635,16 @@ namespace nOCT
                                 // in other cases, the calibrated data stays in the dll, so just 'pfOCTData', not 'ref pfOCTData'
                                 break;
                             case 1:  // IPP
-                                #if TRUEIPP
+#if TRUEIPP
                                 // call ipp function
                                 Array.Clear(pfCalibrationDepthProfile, 0, pfCalibrationDepthProfile.Length);
-                                #endif  // TRUEIPP
+#endif  // TRUEIPP
                                 break;
                             case 2:  // CUDA
-                                #if TRUECUDA
+#if TRUECUDA
                                 Array.Clear(pfCalibrationDepthProfile, 0, pfCalibrationDepthProfile.Length);
                                 Thread.Sleep(10);
-                                #endif  // TRUECUDA
+#endif  // TRUECUDA
                                 break;
                         }  // switch (threadData.nProcess1ProcessingType
                         #endregion  // apply calibration
@@ -4055,16 +4723,16 @@ namespace nOCT
                                     calculateDispersion(pfDispersionData, pfFFTMask, pfDispersionMask, ref pfDispersionDepthProfile, nDispersionPhaseLeft, nDispersionPhaseRight, ref pfDispersionSpectrum, ref pfDispersionPhase, ref pfDispersionR, ref pfDispersionI);
                                     break;
                                 case 1:  // IPP
-                                    #if TRUEIPP
+#if TRUEIPP
                                     // call ipp function
                                     Array.Clear(pfDispersionDepthProfile, 0, pfDispersionDepthProfile.Length);
-                                    #endif  // TRUEIPP
+#endif  // TRUEIPP
                                     break;
                                 case 2:  // CUDA
-                                    #if TRUECUDA
+#if TRUECUDA
                                     Array.Clear(pfDispersionDepthProfile, 0, pfDispersionDepthProfile.Length);
                                     Thread.Sleep(10);
-                                    #endif  // TRUECUDA
+#endif  // TRUECUDA
                                     break;
                             }  // switch (threadData.nProcess1ProcessingType
                             #endregion  // calculate Dispersion
@@ -4121,16 +4789,16 @@ namespace nOCT
                                 // in other cases, the calibrated data stays in the dll, so just 'pfOCTData', not 'ref pfOCTData'
                                 break;
                             case 1:  // IPP
-                                #if TRUEIPP
+#if TRUEIPP
                                 // call ipp function
                                 Array.Clear(pfDispersionDepthProfile, 0, pfDispersionDepthProfile.Length);
-                                #endif  // TRUEIPP
+#endif  // TRUEIPP
                                 break;
                             case 2:  // CUDA
-                                #if TRUECUDA
+#if TRUECUDA
                                 Array.Clear(pfDispersionDepthProfile, 0, pfDispersionDepthProfile.Length);
                                 Thread.Sleep(10);
-                                #endif  // TRUECUDA
+#endif  // TRUECUDA
                                 break;
                         }  // switch (threadData.nProcess1ProcessingType
                         #endregion  // apply Dispersion
@@ -4149,16 +4817,16 @@ namespace nOCT
                                 getComplexDepthProfile(threadData.nRawAlineLength, pfFFTMask, ref pfR, ref pfI);
                                 break;
                             case 1:  // IPP
-                                #if TRUEIPP
+#if TRUEIPP
                                 // call ipp function
                                 Array.Clear(pfCalibrationDepthProfile, 0, pfCalibrationDepthProfile.Length);
-                                #endif  // TRUEIPP
+#endif  // TRUEIPP
                                 break;
                             case 2:  // CUDA
-                                #if TRUECUDA
+#if TRUECUDA
                                 Array.Clear(pfCalibrationDepthProfile, 0, pfCalibrationDepthProfile.Length);
                                 Thread.Sleep(10);
-                                #endif  // TRUECUDA
+#endif  // TRUECUDA
                                 break;
                         }  // switch (threadData.nProcess1ProcessingType
                         #endregion  // final results
@@ -4166,6 +4834,8 @@ namespace nOCT
                         #endregion  // actual processing
 
                         #region launch process2
+
+                        
 
                         if (threadData.rwlsProcess1To2.TryEnterWriteLock(1000))
                         {
@@ -4194,7 +4864,84 @@ namespace nOCT
                                     // copy results to pnProcess2 data structures
                                     break;
                                 case 6:  // elastography
-                                    // copy results to pnProcess2 data structures
+                                         // copy results to pnProcess2 data structures
+
+                                    /* Begin: 20211208 editing by JL */
+
+                                    int nLine, nLineOffset, nHalfLineOffset;
+                                    int nProcessedAlineLength = threadData.nProcessedAlineLength;
+                                    float[] pfHalfR = new float[nNumberSets * nNumberLinesPerSet * nProcessedAlineLength];
+                                    float[] pfHalfI = new float[nNumberSets * nNumberLinesPerSet * nProcessedAlineLength];
+                                    for (nLine = 0; nLine < nNumberLinesPerSet * nNumberSets; nLine++)
+                                    {
+                                        nLineOffset = nLine * nLineLength;
+                                        nHalfLineOffset = nLine * nProcessedAlineLength;
+                                        for (nPoint = 0; nPoint < nProcessedAlineLength; nPoint++)
+                                        {
+                                            pfHalfR[nHalfLineOffset + nPoint] = pfR[nLineOffset + nPoint];
+                                            pfHalfI[nHalfLineOffset + nPoint] = pfI[nLineOffset + nPoint];
+                                        }
+                                    }
+                                    switch (UIData.nLLSystemType)
+                                    {
+                                        case 0: // SD-OCT
+                                            // new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength]
+                                            Buffer.BlockCopy(pfHalfR, 0, threadData.pfProcess2ComplexRealParallel, 0, nNumberSets * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                            Buffer.BlockCopy(pfHalfI, 0, threadData.pfProcess2ComplexImagParallel, 0, nNumberSets * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                            Array.Clear(pfHalfR, 0, pfHalfR.Length);
+                                            Array.Clear(pfHalfI, 0, pfHalfI.Length);
+                                            break;
+                                        case 1: // PS SD-OCT
+                                            // put even and odd lines back to one frame 
+                                            float[] pfParallelHalfR = new float[(nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength];
+                                            float[] pfPerpendicularHalfR = new float[(nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength];
+                                            float[] pfParallelHalfI = new float[(nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength];
+                                            float[] pfPerpendicularHalfI = new float[(nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength];
+                                            int nLineOffsetParallelEven, nLineOffsetParallelOdd, nLineOffsetPerpendicularEven, nLineOffsetPerpendicularOdd;
+
+                                            for (nLine = 0; nLine < nNumberLinesPerSet; nLine++)
+                                            {
+                                                nLineOffsetParallelEven = (nLine + 0 * nNumberLinesPerSet) * nProcessedAlineLength;
+                                                nLineOffsetParallelOdd = (nLine + 1 * nNumberLinesPerSet) * nProcessedAlineLength;
+                                                nLineOffsetPerpendicularEven = (nLine + 2 * nNumberLinesPerSet) * nProcessedAlineLength;
+                                                nLineOffsetPerpendicularOdd = (nLine + 3 * nNumberLinesPerSet) * nProcessedAlineLength;
+                                                for (nPoint = 0; nPoint < nProcessedAlineLength; nPoint++)
+                                                {
+                                                    pfParallelHalfR[2 * nLine * nProcessedAlineLength + nPoint] = pfHalfR[nLineOffsetParallelEven + nPoint];
+                                                    pfParallelHalfR[(2 * nLine + 1) * nProcessedAlineLength + nPoint] = pfHalfR[nLineOffsetParallelOdd + nPoint];
+                                                    pfPerpendicularHalfR[2 * nLine * nProcessedAlineLength + nPoint] = pfHalfR[nLineOffsetPerpendicularEven + nPoint];
+                                                    pfPerpendicularHalfR[(2 * nLine + 1) * nProcessedAlineLength + nPoint] = pfHalfR[nLineOffsetPerpendicularOdd + nPoint];
+
+                                                    pfParallelHalfI[2 * nLine * nProcessedAlineLength + nPoint] = pfHalfI[nLineOffsetParallelEven + nPoint];
+                                                    pfParallelHalfI[(2 * nLine + 1) * nProcessedAlineLength + nPoint] = pfHalfI[nLineOffsetParallelOdd + nPoint];
+                                                    pfPerpendicularHalfI[2 * nLine * nProcessedAlineLength + nPoint] = pfHalfI[nLineOffsetPerpendicularEven + nPoint];
+                                                    pfPerpendicularHalfI[(2 * nLine + 1) * nProcessedAlineLength + nPoint] = pfHalfI[nLineOffsetPerpendicularOdd + nPoint];
+                                                }
+                                            }
+
+                                            Buffer.BlockCopy(pfParallelHalfR, 0, threadData.pfProcess2ComplexRealParallel, 0, (nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                            Buffer.BlockCopy(pfParallelHalfI, 0, threadData.pfProcess2ComplexImagParallel, 0, (nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                            Buffer.BlockCopy(pfPerpendicularHalfR, 0, threadData.pfProcess2ComplexRealPerpendicular, 0, (nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                            Buffer.BlockCopy(pfPerpendicularHalfI, 0, threadData.pfProcess2ComplexImagPerpendicular, 0, (nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                            Array.Clear(pfHalfR, 0, pfHalfR.Length);
+                                            Array.Clear(pfHalfI, 0, pfHalfI.Length);
+                                            Array.Clear(pfParallelHalfR, 0, pfParallelHalfR.Length);
+                                            Array.Clear(pfParallelHalfI, 0, pfParallelHalfI.Length);
+                                            Array.Clear(pfPerpendicularHalfR, 0, pfPerpendicularHalfR.Length);
+                                            Array.Clear(pfPerpendicularHalfR, 0, pfPerpendicularHalfR.Length);
+                                            break;
+                                        case 2: // line field
+                                            break;
+                                        case 3: // OFDI
+
+                                            break;
+                                        case 4: // PS OFDI
+                                            break;
+                                    }   // switch (UIData.nLLSystemType
+
+
+                                    /* End: 20211208 editing by JL */
+
                                     break;
                                 case 7:  // spectroscopy
                                     // copy results to pnProcess2 data structures
@@ -4298,10 +5045,10 @@ namespace nOCT
 
                             Array.Clear(pfIntensity, 0, pfIntensity.Length);
 
-                            for (nLine=0; nLine<nNumberLinesPerSet; nLine++)
+                            for (nLine = 0; nLine < nNumberLinesPerSet; nLine++)
                             {
                                 Array.Clear(pfLine, 0, pfLine.Length);
-                                for (nCalibrationLine=0; nCalibrationLine < nNumberSets; nCalibrationLine++)
+                                for (nCalibrationLine = 0; nCalibrationLine < nNumberSets; nCalibrationLine++)
                                 {
                                     if (pbCalibration[nCalibrationLine])
                                     {
@@ -4315,7 +5062,7 @@ namespace nOCT
                                     for (nDoubler = 0; nDoubler < nDoubleLines; nDoubler++)
                                     {
                                         UIData.pfULImage[nDoubleLines * nLine + nDoubler, 2 * nPoint + 0] = (float)(10.0 * Math.Log10(pfLine[nPoint]));
-                                        UIData.pfULImage[nDoubleLines * nLine + nDoubler, 2 * nPoint + 1] = UIData.pfULImage[nLine, 2 * nPoint + 0];
+                                        //UIData.pfULImage[nDoubleLines * nLine + nDoubler, 2 * nPoint + 1] = UIData.pfULImage[nLine, 2 * nPoint + 0];
                                     }   // for (nDoubler
                                 }
                             }   // for (nLine
@@ -4323,11 +5070,28 @@ namespace nOCT
                             #endregion main
 
                             #region left
+                            //nAline = UIData.nULLeft;
+                            //if (nAline < 0) nAline = 0;
+                            //if (nAline >= threadData.nRawNumberAlines) nAline = threadData.nRawNumberAlines - 1;
+                            //for (nPoint = 0; nPoint < threadData.nRawAlineLength; nPoint++)
+                            //    UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
+
                             nAline = UIData.nULLeft;
+                            int nHalfAvgLineNumber = 300;
+                            float fSum, fAvg;
                             if (nAline < 0) nAline = 0;
                             if (nAline >= threadData.nRawNumberAlines) nAline = threadData.nRawNumberAlines - 1;
                             for (nPoint = 0; nPoint < threadData.nRawAlineLength; nPoint++)
-                                UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
+                            {
+                                // UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
+                                fSum = 0.0f;
+                                for (int i = 0; i < 2 * nHalfAvgLineNumber; i++)
+                                {
+                                    fSum += UIData.pfULImage[nAline - nHalfAvgLineNumber + i, nPoint];
+                                }
+                                fAvg = fSum / (2 * nHalfAvgLineNumber);
+                                UIData.pfULLeft[0, nPoint] = fAvg;
+                            }
                             #endregion
 
                             #region top
@@ -4339,7 +5103,6 @@ namespace nOCT
                             #endregion
                         }
                         #endregion check for UL intensity
-
 
                         // calculate intensity images as requested
 
@@ -4356,6 +5119,8 @@ namespace nOCT
                     }
 
                 }
+
+
 
             }  // if (WaitHandle.WaitAny
             #endregion
@@ -4381,15 +5146,28 @@ namespace nOCT
 
         void Process2Thread()
         {
-#region initializing
+            #region initializing
             threadData.strProcess2ThreadStatus = "Initializing...";
+
+            #region variables for thread operation
 
             // initialization
             bool bTroublemaker = false;
 
             int nProcess2Type;
 
+            #region define general use variables
             int nAline, nPoint;
+            int nProcessedNumberLines = threadData.nProcessedNumberAlines;
+            int nProcessedLineLength = threadData.nProcessedAlineLength;
+            float[] pfLine = new float[nProcessedLineLength];
+            float[] pfIntensity = new float[nProcessedNumberLines * nProcessedLineLength];
+            #endregion define general use variables
+
+            #region necessary for calculations
+            float[] pfProcessedR = new float[nProcessedLineLength * nProcessedNumberLines];
+            float[] pfProcessedI = new float[nProcessedLineLength * nProcessedNumberLines];
+            #endregion necessary for calculations
 
             // set up wait handles to start
             WaitHandle[] pweStart = new WaitHandle[2];
@@ -4400,12 +5178,64 @@ namespace nOCT
             pweLoop[0] = threadData.mreProcess2Kill;
             pweLoop[1] = threadData.mreProcess2Action;
 
+            #endregion variables for thread operation
+
+            #region variables for main loop
+
+            // elastography
+            float[,] pfdB = new float[nProcessedNumberLines, nProcessedLineLength];
+            float[,] pfdBDiff = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            float[,] pfdBEven = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            float[,] pfdBOdd = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            float[,] pfOCEStrain = new float[nProcessedNumberLines >> 1, nProcessedLineLength];
+            double dOCEStrain;
+            double dLambda = 560e-9; // center wavelength
+            double dK = 2 * Math.PI / dLambda; // wavenumber
+
+            switch (threadData.nProcess2Type)
+            {
+                case 0:
+                    threadData.strProcess2ThreadStatus = "...none...";
+                    break;
+                case 1:
+                    threadData.strProcess2ThreadStatus = "...intensity...";
+                    break;
+                case 2:
+                    threadData.strProcess2ThreadStatus = "...attenuation...";
+                    break;
+                case 3:
+                    threadData.strProcess2ThreadStatus = "...phase...";
+                    break;
+                case 4:
+                    threadData.strProcess2ThreadStatus = "...polarization...";
+                    break;
+                case 5:
+                    threadData.strProcess2ThreadStatus = "...angiography...";
+                    break;
+                case 6:
+                    threadData.strProcess2ThreadStatus = "...elastography...";
+                    break;
+                case 7:
+                    threadData.strProcess2ThreadStatus = "...spectroscopy...";
+                    break;
+                case 8:
+                    threadData.strProcess2ThreadStatus = "...spectral binning...";
+
+                    // call to ipp thread for spectral binning
+                    Thread.Sleep(500);
+
+                    break;
+            }   // switch (nProcess2Type
+
+
+            #endregion variables for main loop
+
             // initialization complete
             threadData.mreProcess2Ready.Set();
             threadData.strProcess2ThreadStatus = "Ready!";
-#endregion
+            #endregion
 
-#region main loop
+            #region main loop
             threadData.strProcess2ThreadStatus = "Set...";
             if (WaitHandle.WaitAny(pweStart) == 1)
             {
@@ -4443,6 +5273,13 @@ namespace nOCT
                                 break;
                             case 6:
                                 threadData.strProcess2ThreadStatus = "...elastography...";
+
+                                /* Begin: 20211211 editing by JL */
+                                // Array.Clear(UIData.pfURImage, 0, UIData.pfURImage.Length); 
+                                Buffer.BlockCopy(threadData.pfProcess2ComplexRealParallel, 0, pfProcessedR, 0, nProcessedLineLength * nProcessedNumberLines * sizeof(float));
+                                Buffer.BlockCopy(threadData.pfProcess2ComplexImagParallel, 0, pfProcessedI, 0, nProcessedLineLength * nProcessedNumberLines * sizeof(float));
+                                /* End: 20211211 editing by JL */
+
                                 break;
                             case 7:
                                 threadData.strProcess2ThreadStatus = "...spectroscopy...";
@@ -4465,6 +5302,7 @@ namespace nOCT
                                 break;
                             case 1:
                                 threadData.strProcess2ThreadStatus = "...intensity...";
+
                                 break;
                             case 2:
                                 threadData.strProcess2ThreadStatus = "...attenuation...";
@@ -4480,6 +5318,67 @@ namespace nOCT
                                 break;
                             case 6:
                                 threadData.strProcess2ThreadStatus = "...elastography...";
+
+                                /* Begin: 20211211 editing by JL */
+
+
+                                // actual elastography processing
+                                for (nAline = 0; nAline < nProcessedNumberLines; nAline++)
+                                {
+                                    int nLineOffset = nAline * nProcessedLineLength;
+                                    for (nPoint = 0; nPoint < nProcessedLineLength; nPoint++)
+                                    {
+                                        pfLine[nPoint] = pfProcessedR[nLineOffset + nPoint] * pfProcessedR[nLineOffset + nPoint] + pfProcessedI[nLineOffset + nPoint] * pfProcessedI[nLineOffset + nPoint];
+                                        // UIData.pfURImage[nAline, nPoint] = (float)(10.0 * Math.Log10(pfLine[nPoint])); 
+                                        pfdB[nAline, nPoint] = (float)(10.0 * Math.Log10(pfLine[nPoint]));
+                                    }
+                                }
+
+                                processElastography(pfdB, ref pfdBDiff, ref pfdBEven, ref pfdBOdd);
+
+                                // intensity / OCE display options 
+                                switch (UIData.nUROCEDisplayModeRadioButtonIndex)
+                                {
+                                    case 0: // display intensity
+
+                                        switch (UIData.nUROCEIntensityDisplayIndex)
+                                        {
+                                            case 0: // all lines
+                                                Buffer.BlockCopy(pfdB, 0, UIData.pfURImage, 0, pfdB.Length * sizeof(float));
+                                                break;
+                                            case 1: // even lines
+                                                Buffer.BlockCopy(pfdBEven, 0, UIData.pfURImage, 0, pfdBEven.Length * sizeof(float));
+                                                break;
+                                            case 2: // odd lines
+                                                Buffer.BlockCopy(pfdBOdd, 0, UIData.pfURImage, 0, pfdBOdd.Length * sizeof(float));
+                                                break;
+                                        }
+
+                                        break;
+                                    case 1: // display OCE
+
+                                        switch (UIData.nUROCEOCEDisplayIndex)
+                                        {
+                                            case 0: // OCE strain
+                                                for (int nX = 0; nX < nProcessedNumberLines >> 1; nX++)
+                                                {
+                                                    for (int nY = 0; nY < nProcessedLineLength; nY++)
+                                                    {
+                                                        dOCEStrain = (1e6) * Math.Sqrt((4.0 / Math.Pow(dK, 2)) * (1 - Math.Pow(10, -(double)pfdBDiff[nX, nY] / 10)));
+                                                        pfOCEStrain[nX, nY] = (float)dOCEStrain;
+                                                    }
+
+                                                }
+                                                Buffer.BlockCopy(pfOCEStrain, 0, UIData.pfURImage, 0, pfOCEStrain.Length * sizeof(float));
+                                                break;
+                                            case 1: // dB difference
+                                                Buffer.BlockCopy(pfdBDiff, 0, UIData.pfURImage, 0, pfdBDiff.Length * sizeof(float));
+                                                break;
+                                        }
+                                        break;
+                                } // switch (UIData.nUROCEDisplayModeRadioButtonIndex)
+
+                                /* End: 20211211 editing by JL */
                                 break;
                             case 7:
                                 threadData.strProcess2ThreadStatus = "...spectroscopy...";
@@ -4524,30 +5423,30 @@ namespace nOCT
                 }
 
             }  // if (WaitHandle.WaitAny
-#endregion
+            #endregion
 
-#region cleanup
+            #region cleanup
             if (bTroublemaker)
             {
                 threadData.mreProcess2Dead.Set();
             }
             else
             {  // if (bTroublemaker
-#region cleanup
+                #region cleanup
                 threadData.strProcess2ThreadStatus = "Cleaning up...";
                 // clean up code
                 threadData.nProcess2Node = -1;
                 // signal other threads
                 threadData.mreProcess2Dead.Set();
                 threadData.strProcess2ThreadStatus = "Done.";
-#endregion
+                #endregion
             }  // if (bTroublemaker
-#endregion
+            #endregion
         }
 
         void CleanupThread()
         {
-#region initializing
+            #region initializing
             threadData.strCleanupThreadStatus = "Initializing...";
 
             // initialization
@@ -4567,9 +5466,9 @@ namespace nOCT
             // initialization complete
             threadData.mreCleanupReady.Set();
             threadData.strCleanupThreadStatus = "Ready!";
-#endregion
+            #endregion
 
-#region main loop
+            #region main loop
             threadData.strCleanupThreadStatus = "Set...";
             if (WaitHandle.WaitAny(pweStart) == 1)
             {
@@ -4617,25 +5516,25 @@ namespace nOCT
 
                 }  // while (WaitHandle.WaitAny
             }  // if (WaitHandle.WaitAny
-#endregion
+            #endregion
 
-#region cleanup
+            #region cleanup
             if (bTroublemaker)
             {
                 threadData.mreCleanupDead.Set();
             }
             else
             {  // if (bTroublemaker
-#region cleanup
+                #region cleanup
                 threadData.strCleanupThreadStatus = "Cleaning up...";
                 // clean up code
                 ;
                 // signal other threads
                 threadData.mreCleanupDead.Set();
                 threadData.strCleanupThreadStatus = "Done.";
-#endregion
+                #endregion
             }  // if (bTroublemaker
-#endregion
+            #endregion
 
         }
 
@@ -4656,6 +5555,7 @@ namespace nOCT
             UIData.nURIntensityLeft = (int)(p.X);
             UIData.nURIntensityTop = (int)(p.Y);
         }
+
 
 
         private void btnUpdateUL_Click(object sender, RoutedEventArgs e)
@@ -4735,6 +5635,7 @@ namespace nOCT
         {
             UIData.bDispersionClear = true;
         }
+
     }
 
 
@@ -4991,6 +5892,29 @@ namespace nOCT
         }   // public int nURIntensityCUDA
         /* End: 20201210 editing by JL */
 
+        /* Begin: 20201213 editing by JL: elastography UI on UR */
+        public int nUROCEDisplayModeRadioButtonIndex = -1;
+
+        public string name_nUROCEIntensityDisplayIndex = "nUROCEIntensityDisplayIndex";
+        private int _nUROCEIntensityDisplayIndex;
+        public int nUROCEIntensityDisplayIndex
+        {
+            get { return _nUROCEIntensityDisplayIndex; }
+            set { _nUROCEIntensityDisplayIndex = value; OnPropertyChanged(name_nUROCEIntensityDisplayIndex); }
+        }   // public int nUROCEIntensityDisplayIndex
+
+        public string name_nUROCEOCEDisplayIndex = "nUROCEOCEDisplayIndex";
+        private int _nUROCEOCEDisplayIndex;
+        public int nUROCEOCEDisplayIndex
+        {
+            get { return _nUROCEOCEDisplayIndex; }
+            set { _nUROCEOCEDisplayIndex = value; OnPropertyChanged(name_nUROCEOCEDisplayIndex); }
+        }   // public int nUROCEOCEDisplayIndex
+
+
+        /* End: 20201213 editing by JL */
+
+
         public string name_nURSpectralBinningTop = "nURSpectralBinningTop";
         private int _nURSpectralBinningTop;
         public int nURSpectralBinningTop
@@ -5007,7 +5931,7 @@ namespace nOCT
             set { _nURSpectralBinningLeft = value; OnPropertyChanged(name_nURSpectralBinningLeft); }
         }   // public int nURSpectralBinningLeft
 
-#endregion
+        #endregion
 
         #region LL
 
@@ -5203,45 +6127,45 @@ namespace nOCT
             set { _nLLFileCycle = value; OnPropertyChanged(name_nLLFileCycle); }
         }   // public int nLLFileCycle
 
-        public string name_fLLCenterX = "fLLCenterX";
-        private float _fLLCenterX;
-        public float fLLCenterX
+        public string name_fLLFastGalvoStart = "fLLFastGalvoStart";
+        private float _fLLFastGalvoStart;
+        public float fLLFastGalvoStart
         {
-            get { return _fLLCenterX; }
-            set { _fLLCenterX = value; OnPropertyChanged(name_fLLCenterX); }
-        }   // public float fLLCenterX
+            get { return _fLLFastGalvoStart; }
+            set { _fLLFastGalvoStart = value; OnPropertyChanged(name_fLLFastGalvoStart); }
+        }   // public float fLLFastGalvoStart
 
-        public string name_fLLCenterY = "fLLCenterY";
-        private float _fLLCenterY;
-        public float fLLCenterY
+        public string name_fLLFastGalvoStop = "fLLFastGalvoStop";
+        private float _fLLFastGalvoStop;
+        public float fLLFastGalvoStop
         {
-            get { return _fLLCenterY; }
-            set { _fLLCenterY = value; OnPropertyChanged(name_fLLCenterY); }
-        }   // public float fLLCenterY
+            get { return _fLLFastGalvoStop; }
+            set { _fLLFastGalvoStop = value; OnPropertyChanged(name_fLLFastGalvoStop); }
+        }   // public float fLLFastGalvoStop
 
-        public string name_fLLFastAngle = "fLLFastAngle";
-        private float _fLLFastAngle;
-        public float fLLFastAngle
+        public string name_nLLFastScanRounding = "nLLFastScanRounding";
+        private int _nLLFastScanRounding;
+        public int nLLFastScanRounding
         {
-            get { return _fLLFastAngle; }
-            set { _fLLFastAngle = value; OnPropertyChanged(name_fLLFastAngle); }
-        }   // public float fLLFastAngle
+            get { return _nLLFastScanRounding; }
+            set { _nLLFastScanRounding = value; OnPropertyChanged(name_nLLFastScanRounding); }
+        }   // public float nLLFastScanRounding
 
-        public string name_fLLRangeFast = "fLLRangeFast";
-        private float _fLLRangeFast;
-        public float fLLRangeFast
+        public string name_fLLSlowGalvoStart = "fLLSlowGalvoStart";
+        private float _fLLSlowGalvoStart;
+        public float fLLSlowGalvoStart
         {
-            get { return _fLLRangeFast; }
-            set { _fLLRangeFast = value; OnPropertyChanged(name_fLLRangeFast); }
-        }   // public float fLLRangeFast
+            get { return _fLLSlowGalvoStart; }
+            set { _fLLSlowGalvoStart = value; OnPropertyChanged(name_fLLSlowGalvoStart); }
+        }   // public float fLLSlowGalvoStart
 
-        public string name_fLLRangeSlow = "fLLRangeSlow";
-        private float _fLLRangeSlow;
-        public float fLLRangeSlow
+        public string name_fLLSlowGalvoStop = "fLLSlowGalvoStop";
+        private float _fLLSlowGalvoStop;
+        public float fLLSlowGalvoStop
         {
-            get { return _fLLRangeSlow; }
-            set { _fLLRangeSlow = value; OnPropertyChanged(name_fLLRangeSlow); }
-        }   // public float fLLRangeSlow
+            get { return _fLLSlowGalvoStop; }
+            set { _fLLSlowGalvoStop = value; OnPropertyChanged(name_fLLSlowGalvoStop); }
+        }   // public float fLLSlowGalvoStop
 
         public string name_nLLDwellFast = "nLLDwellFast";
         private int _nLLDwellFast;
@@ -5610,10 +6534,10 @@ namespace nOCT
         public int nNodeID;
         public string strFilename;
         /* Begin: 20210414 editing by JL */
-        public string strDateTime; 
+        public string strDateTime;
         /* End: 20210414 editing by JL */
-        public int nFileNumber; 
-        public int nFramePosition;        
+        public int nFileNumber;
+        public int nFramePosition;
 
         public ulong nSize;
         public ReaderWriterLockSlim rwls;
@@ -5622,13 +6546,13 @@ namespace nOCT
         public int nSaved;
         public int nProcessed;
         /* Begin: 20210414 editing by JL */
-        public int nLostBuffer0, nLostBuffer1; 
+        public int nLostBuffer0, nLostBuffer1;
         /* End: 20210414 editing by JL */
 
         public UInt16[][] pnAlazar;
         public float[] pfDAQ;
         // SD-OCT
-        public Int16[][] pnIMAQ; 
+        public Int16[][] pnIMAQ;
         // PS-SD-OCT
         public Int16[][] pnIMAQParallel;
         public Int16[][] pnIMAQPerpendicular;
@@ -5671,7 +6595,7 @@ namespace nOCT
                 case 1: // PS-SD-OCT
                     nNumberChunks = uiData.nLLChunksPerImage;
                     nLinesPerChunk = uiData.nLLLinesPerChunk;
-                    nLineLength = uiData.nLLIMAQLineLength;                    
+                    nLineLength = uiData.nLLIMAQLineLength;
 
                     pnIMAQParallel = new Int16[nNumberChunks][];
                     pnIMAQPerpendicular = new Int16[nNumberChunks][];
@@ -5730,19 +6654,18 @@ namespace nOCT
         public int nRawAlineLength;
         public int nProcessedNumberAlines;
         public int nProcessedAlineLength;
-
         public bool bRecord = false;
 
-#region MainThread
+        #region MainThread
         public Thread threadMain;
         public ManualResetEvent mreMainReady;
         public ManualResetEvent mreMainRun;
         public ManualResetEvent mreMainKill;
         public ManualResetEvent mreMainDead;
         public string strMainThreadStatus = "XXX";
-#endregion
+        #endregion
 
-#region OutputThread
+        #region OutputThread
         public Thread threadOutput;
         public ManualResetEvent mreOutputReady;
         public ManualResetEvent mreOutputRun;
@@ -5750,9 +6673,9 @@ namespace nOCT
         public ManualResetEvent mreOutputDead;
         public ManualResetEvent mreOutputUpdate;
         public string strOutputThreadStatus = "XXX";
-#endregion
+        #endregion
 
-#region AcquireThread
+        #region AcquireThread
         public Thread threadAcquire;
         public ManualResetEvent mreAcquireReady;
         public ManualResetEvent mreAcquireRun;
@@ -5762,16 +6685,16 @@ namespace nOCT
         public string strAcquireThreadStatus = "XXX";
         /* Begin: 20201208 editing JL */
         public int nAcquisitionNodeID;
-        public int nFileNumber = 100001; 
+        public int nFileNumber = 100001;
         public int nFramePosition = 1;
         /* End: 20201208 editing JL */
-#endregion
+        #endregion
 
         public int nSystemActual;
         public LinkedListNode<CDataNode> nodeAcquire;
         public ManualResetEvent mreAcquireNodeReady;
 
-#region AcquireAlazarThread
+        #region AcquireAlazarThread
         public Thread threadAcquireAlazar;
         public ManualResetEvent mreAcquireAlazarReady;
         public ManualResetEvent mreAcquireAlazarRun;
@@ -5780,9 +6703,9 @@ namespace nOCT
         public AutoResetEvent areAcquireAlazarGo;
         public AutoResetEvent areAcquireAlazarComplete;
         public string strAcquireAlazarThreadStatus = "XAla";
-#endregion
+        #endregion
 
-#region AcquireDAQThread
+        #region AcquireDAQThread
         public Thread threadAcquireDAQ;
         public ManualResetEvent mreAcquireDAQReady;
         public ManualResetEvent mreAcquireDAQRun;
@@ -5791,9 +6714,9 @@ namespace nOCT
         public AutoResetEvent areAcquireDAQGo;
         public AutoResetEvent areAcquireDAQComplete;
         public string strAcquireDAQThreadStatus = "XDAQ";
-#endregion
+        #endregion
 
-#region AcquireIMAQThread
+        #region AcquireIMAQThread
         public Thread threadAcquireIMAQ;
         public ManualResetEvent mreAcquireIMAQReady;
         public ManualResetEvent mreAcquireIMAQRun;
@@ -5805,9 +6728,9 @@ namespace nOCT
         public ManualResetEvent mreCameraSync;
         /* 20210127 HY for Camera Sync*/
         public string strAcquireIMAQThreadStatus = "XIMQ";
-#endregion
+        #endregion
 
-#region SaveThread
+        #region SaveThread
         public Thread threadSave;
         public ManualResetEvent mreSaveReady;
         public ManualResetEvent mreSaveRun;
@@ -5815,10 +6738,10 @@ namespace nOCT
         public ManualResetEvent mreSaveDead;
         public SemaphoreSlim ssSaveAction;
         public string strSaveThreadStatus = "XXX";
-        public int nSaveNodeID; 
-#endregion
+        public int nSaveNodeID;
+        #endregion
 
-#region ProcessThread
+        #region ProcessThread
         public Thread threadProcess;
         public ManualResetEvent mreProcessReady;
         public ManualResetEvent mreProcessRun;
@@ -5826,7 +6749,7 @@ namespace nOCT
         public ManualResetEvent mreProcessDead;
         public SemaphoreSlim ssProcessAction;
         public string strProcessThreadStatus = "XXX";
-#endregion
+        #endregion
 
         public ReaderWriterLockSlim rwlsProcessTo1;
         public int nProcess1WriteTimeout;
@@ -5839,7 +6762,7 @@ namespace nOCT
         public int nProcess1Node = -1;
         public int nProcessTo1Data = 0;
 
-#region Process1Thread
+        #region Process1Thread
         public Thread threadProcess1;
         public ManualResetEvent mreProcess1Ready;
         public ManualResetEvent mreProcess1Run;
@@ -5847,7 +6770,7 @@ namespace nOCT
         public ManualResetEvent mreProcess1Dead;
         public ManualResetEvent mreProcess1Action;
         public string strProcess1ThreadStatus = "XXX";
-#endregion
+        #endregion
 
         public int nProcess2Type;
 
@@ -5868,7 +6791,7 @@ namespace nOCT
         public int nProcess2ANode = -1;
         public int nProcess1To2AData = 0;
 
-#region Process2Thread
+        #region Process2Thread
         public Thread threadProcess2;
         public ManualResetEvent mreProcess2Ready;
         public ManualResetEvent mreProcess2Run;
@@ -5876,9 +6799,9 @@ namespace nOCT
         public ManualResetEvent mreProcess2Dead;
         public ManualResetEvent mreProcess2Action;
         public string strProcess2ThreadStatus = "XXX";
-#endregion
+        #endregion
 
-#region CleanupThread
+        #region CleanupThread
         public Thread threadCleanup;
         public ManualResetEvent mreCleanupReady;
         public ManualResetEvent mreCleanupRun;
@@ -5886,55 +6809,55 @@ namespace nOCT
         public ManualResetEvent mreCleanupDead;
         public ManualResetEvent mreCleanupAction;
         public string strCleanupThreadStatus = "XXX";
-#endregion
+        #endregion
 
 
         public void Initialize()
         {
-#region MainThread
+            #region MainThread
             mreMainReady = new ManualResetEvent(false);
             mreMainRun = new ManualResetEvent(false);
             mreMainKill = new ManualResetEvent(false);
             mreMainDead = new ManualResetEvent(false);
-#endregion
+            #endregion
 
-#region OutputThread
+            #region OutputThread
             mreOutputReady = new ManualResetEvent(false);
             mreOutputRun = new ManualResetEvent(false);
             mreOutputKill = new ManualResetEvent(false);
             mreOutputDead = new ManualResetEvent(false);
             mreOutputUpdate = new ManualResetEvent(false);
-#endregion
+            #endregion
 
-#region AcquireThread
+            #region AcquireThread
             mreAcquireReady = new ManualResetEvent(false);
             mreAcquireRun = new ManualResetEvent(false);
             mreAcquireKill = new ManualResetEvent(false);
             mreAcquireDead = new ManualResetEvent(false);
             ssAcquireComplete = new SemaphoreSlim(0);
-#endregion
+            #endregion
 
             mreAcquireNodeReady = new ManualResetEvent(false);
 
-#region AcquireAlazarThread
+            #region AcquireAlazarThread
             mreAcquireAlazarReady = new ManualResetEvent(false);
             mreAcquireAlazarRun = new ManualResetEvent(false);
             mreAcquireAlazarKill = new ManualResetEvent(false);
             mreAcquireAlazarDead = new ManualResetEvent(false);
             areAcquireAlazarGo = new AutoResetEvent(false);
             areAcquireAlazarComplete = new AutoResetEvent(false);
-#endregion
+            #endregion
 
-#region AcquireDAQThread
+            #region AcquireDAQThread
             mreAcquireDAQReady = new ManualResetEvent(false);
             mreAcquireDAQRun = new ManualResetEvent(false);
             mreAcquireDAQKill = new ManualResetEvent(false);
             mreAcquireDAQDead = new ManualResetEvent(false);
             areAcquireDAQGo = new AutoResetEvent(false);
             areAcquireDAQComplete = new AutoResetEvent(false);
-#endregion
+            #endregion
 
-#region AcquireIMAQThread
+            #region AcquireIMAQThread
             mreAcquireIMAQReady = new ManualResetEvent(false);
             mreAcquireIMAQRun = new ManualResetEvent(false);
             mreAcquireIMAQKill = new ManualResetEvent(false);
@@ -5953,43 +6876,43 @@ namespace nOCT
             mreSaveKill = new ManualResetEvent(false);
             mreSaveDead = new ManualResetEvent(false);
             ssSaveAction = new SemaphoreSlim(0);
-#endregion
+            #endregion
 
-#region ProcessThread
+            #region ProcessThread
             mreProcessReady = new ManualResetEvent(false);
             mreProcessRun = new ManualResetEvent(false);
             mreProcessKill = new ManualResetEvent(false);
             mreProcessDead = new ManualResetEvent(false);
             ssProcessAction = new SemaphoreSlim(0);
-#endregion
+            #endregion
 
             rwlsProcessTo1 = new ReaderWriterLockSlim();
 
-#region Process1Thread
+            #region Process1Thread
             mreProcess1Ready = new ManualResetEvent(false);
             mreProcess1Run = new ManualResetEvent(false);
             mreProcess1Kill = new ManualResetEvent(false);
             mreProcess1Dead = new ManualResetEvent(false);
             mreProcess1Action = new ManualResetEvent(true);
-#endregion
+            #endregion
 
             rwlsProcess1To2 = new ReaderWriterLockSlim();
 
-#region Process2Thread
+            #region Process2Thread
             mreProcess2Ready = new ManualResetEvent(false);
             mreProcess2Run = new ManualResetEvent(false);
             mreProcess2Kill = new ManualResetEvent(false);
             mreProcess2Dead = new ManualResetEvent(false);
             mreProcess2Action = new ManualResetEvent(true);
-#endregion
+            #endregion
 
-#region CleanupThead
+            #region CleanupThead
             mreCleanupReady = new ManualResetEvent(false);
             mreCleanupRun = new ManualResetEvent(false);
             mreCleanupKill = new ManualResetEvent(false);
             mreCleanupDead = new ManualResetEvent(false);
             mreCleanupAction = new ManualResetEvent(false);
-#endregion
+            #endregion
 
         }   // public void Initialize
 
@@ -6096,30 +7019,27 @@ namespace nOCT
     }   // public class nOCTippWrapper
 
 
-    public class nOCTimaqWrapper : IDisposable
+    public class nOCTimaqWrapper_TwoCam : IDisposable
     {
         bool disposed = false;
 
 
-
-
-
         [SuppressUnmanagedCodeSecurityAttribute()]
         // [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\Hang\\Lab Razer\\nOCTImaq\\x64\\Debug\\nOCTImaq.dll")]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\nOCT 20210119\\dll\\nOCTImaq.dll")]
+        [DllImport("C:\\Users\\NOIR_\\Desktop\\nOCT 1310 OCE new setup one camera\\dll\\nOCTImaq.dll")]
         public static extern int InitializeImaq(char[] interfaceName0, char[] interfaceName1, int nImaqLineLength, int nLinesPerChunk, int errInfo);
 
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\nOCT 20210119\\dll\\nOCTImaq.dll")]
+        [DllImport("C:\\Users\\NOIR_\\Desktop\\nOCT 1310 OCE new setup one camera\\dll\\nOCTImaq.dll")]
         public static extern void StartAcquisition();
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\nOCT 20210119\\dll\\nOCTImaq.dll")]
+        [DllImport("C:\\Users\\NOIR_\\Desktop\\nOCT 1310 OCE new setup one camera\\dll\\nOCTImaq.dll")]
         public static extern void RealAcquisition(ref int bufferIndex0, ref int lostbuffers0, Int16[] pnTemp0, ref int bufferIndex1, ref int lostbuffers1, Int16[] pnTemp1);
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\ONI-WORKSTATION-01\\Desktop\\nOCT 20210119\\dll\\nOCTImaq.dll")]
+        [DllImport("C:\\Users\\NOIR_\\Desktop\\nOCT 1310 OCE new setup one camera\\dll\\nOCTImaq.dll")]
         public static extern void StopAcquisition();
 
         public void Dispose()
@@ -6141,7 +7061,59 @@ namespace nOCT
             // free other ressources
         }   // protected virtual void Dispose
 
-        ~nOCTimaqWrapper()
+        ~nOCTimaqWrapper_TwoCam()
+        {
+            Dispose(false);
+        }   // ~nOCTimaqWrapper
+
+    }   // public class nOCTimaqWrapper
+
+    public class nOCTimaqWrapper_OneCam : IDisposable
+    {
+        bool disposed = false;
+
+
+        [SuppressUnmanagedCodeSecurityAttribute()]
+        [DllImport("C:\\Users\\NOIR_\\Desktop\\nOCT 1310 OCE new setup one camera\\dll\\nOCTImaq_OneCamera_20211216.dll")]
+        public static extern int InitializeImaq(char[] interfaceName0, int nImaqLineLength, int nLinesPerChunk, int errInfo);
+
+
+        [SuppressUnmanagedCodeSecurityAttribute()]
+        [DllImport("C:\\Users\\NOIR_\\Desktop\\nOCT 1310 OCE new setup one camera\\dll\\nOCTImaq_OneCamera_20211216.dll")]
+        public static extern void StartAcquisition();
+
+        [SuppressUnmanagedCodeSecurityAttribute()]
+        [DllImport("C:\\Users\\NOIR_\\Desktop\\nOCT 1310 OCE new setup one camera\\dll\\nOCTImaq_OneCamera_20211216.dll")]
+        public static extern void RealAcquisition0(int bufferIndex0, Int16[] pnTemp0, int nCounter);
+
+        //[SuppressUnmanagedCodeSecurityAttribute()]
+        //[DllImport("D:\\Codes\\nOCT USC OCE\\nOCTImaq_OneCamera.dll")]
+        //public static extern void RealAcquisition1(int bufferIndex1, Int16[] pnTemp1);
+
+        [SuppressUnmanagedCodeSecurityAttribute()]
+        [DllImport("C:\\Users\\NOIR_\\Desktop\\nOCT 1310 OCE new setup one camera\\dll\\nOCTImaq_OneCamera_20211216.dll")]
+        public static extern void StopAcquisition();
+
+        public void Dispose()
+        {
+            if (!disposed)
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+                disposed = true;
+            }   // if (!disposed
+        }   // public void Dispose
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                //free managed ressources
+            }   // if (disposing
+            // free other ressources
+        }   // protected virtual void Dispose
+
+        ~nOCTimaqWrapper_OneCam()
         {
             Dispose(false);
         }   // ~nOCTimaqWrapper
