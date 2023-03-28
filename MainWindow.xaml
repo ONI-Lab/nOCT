@@ -27,7 +27,7 @@
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="30" />
-                <ColumnDefinition Width="250" />
+                <ColumnDefinition Width="250" />                
                 <ColumnDefinition Width="30" />
                 <ColumnDefinition Width="630" />
             </Grid.ColumnDefinitions>
@@ -43,7 +43,7 @@
                     <ColumnDefinition Width="1*" />
                     <ColumnDefinition Width="45" />
                 </Grid.ColumnDefinitions>
-                <ComboBox Grid.Row="0" Grid.Column="0" Name="cbULDisplay" SelectedIndex="{Binding nULDisplayIndex}" HorizontalAlignment="Left" Width="201">
+                <ComboBox Grid.Row="0" Grid.Column="0" Name="cbULDisplay" SelectedIndex="{Binding nULDisplayIndex}" HorizontalAlignment="Left" Width="200">
                     <ComboBoxItem>raw AlazarTech</ComboBoxItem>
                     <ComboBoxItem>raw DAQ</ComboBoxItem>
                     <ComboBoxItem>raw IMAQ</ComboBoxItem>
@@ -253,6 +253,8 @@
 
             <CheckBox Grid.Column="0" Grid.Row="2" Name="chkULLeftActive" HorizontalAlignment="Right" VerticalAlignment="Bottom" IsChecked="{Binding bULLeftActive}" />
             <TextBox Grid.Row="2" Grid.Column="1" Height="20" Width="50" HorizontalAlignment="Left" VerticalAlignment="Bottom" Name="txtULIMAQLeft" Text="{Binding nULLeft}" />
+            <TextBlock Grid.Row="2" Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="75,0,0,3" >average lines</TextBlock>
+            <TextBox Grid.Row="2" Grid.Column="1" Height="20" Width="50" HorizontalAlignment="Left" VerticalAlignment="Bottom" Name="txtULIMAQLeftAvgNumAlines" Text="{Binding nULLeftAvgNumLines}" Margin="150,0,0,0"  />
             <ni:Graph Name="graphULLeft" RenderMode="Raster" Grid.ColumnSpan="4" Margin="-43,57,575,80.667" Grid.Row="3" >
                 <ni:Graph.RenderTransform>
                     <RotateTransform Angle="90"/>
@@ -320,8 +322,10 @@
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="45" />
+
                 </Grid.ColumnDefinitions>
-                <ComboBox Grid.Row="0" Grid.Column="0" Name="cbURDisplay" SelectedIndex="{Binding nURDisplayIndex}">
+                <ComboBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="1" HorizontalAlignment="Left" Width="200" Name="cbURDisplay" SelectedIndex="{Binding nURDisplayIndex}">
                     <ComboBoxItem>none</ComboBoxItem>
                     <ComboBoxItem>intensity</ComboBoxItem>
                     <ComboBoxItem>attenuation</ComboBoxItem>
@@ -332,7 +336,8 @@
                     <ComboBoxItem>spectroscopy</ComboBoxItem>
                     <ComboBoxItem>spectral binning</ComboBoxItem>
                 </ComboBox>
-                <TabControl Grid.Row="2" Grid.Column="0" Background="Black">
+                <Button Grid.Row="0" Grid.Column="1" Name="btnUpdateUR" Click="btnUpdateUR_Click">update</Button>
+                <TabControl Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Background="Black" SelectedIndex="5">
                     <!-- intensity -->
                     <TabItem>
                         <TabItem.Header>
@@ -389,8 +394,6 @@
                             <TextBox Grid.Row="7" Grid.Column="7" Name="txtURIntensityCUDA" Text="{Binding nURIntensityCUDA}" />
                         </Grid>
                     </TabItem>
-
-
 
                     <!-- attenuation -->
                     <TabItem>
@@ -664,47 +667,49 @@
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="5" />
-                                <ColumnDefinition Width="1*" />
-                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="9*" />
+                                <ColumnDefinition Width="34*"/>
+                                <ColumnDefinition Width="43*" />
                                 <ColumnDefinition Width="10" />
-                                <ColumnDefinition Width="1*" />
-                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="43*" />
+                                <ColumnDefinition Width="43*" />
                                 <ColumnDefinition Width="10" />
-                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="43*" />
                                 <ColumnDefinition Width="5" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" FontWeight="Bold" FontSize="14">elastography</TextBlock>
-                            <TextBlock Grid.Row="1" Grid.Column="5" HorizontalAlignment="Right" VerticalAlignment="Center">depth</TextBlock>
-                            <TextBox Grid.Row="1" Grid.Column="7" Name="txtUROCETop" Text="{Binding nUROCETop}" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" FontWeight="Bold" FontSize="14">elastography</TextBlock>
+                            <TextBlock Grid.Row="1" Grid.Column="6" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.ColumnSpan="2" Margin="0,3,9,2">depth</TextBlock>
+                            <TextBox Grid.Row="1" Grid.Column="8" Name="txtUROCETop" Text="{Binding nUROCETop}" />
 
-                            <CheckBox Grid.Row="2" Grid.Column="1"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment="Center" Name="chkOCESurface" IsChecked="{Binding bUROCESurface}" >display surface</CheckBox>
-                            <CheckBox Grid.Row="3" Grid.Column="1"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment="Center" Name="chkOCEEnFace" IsChecked="{Binding bUROCEEnFace}" >display en face</CheckBox>
-                            <TextBlock Grid.Row="3" Grid.Column="4" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,3,0">range</TextBlock>
-                            <TextBox Grid.Row="3" Grid.Column="5" Name="txtUROCEEnFaceUp" Text="{Binding nUROCEEnFaceUp}" />
-                            <TextBox Grid.Row="3" Grid.Column="7" Name="txtUROCEEnFaceLow" Text="{Binding nUROCEEnFaceLow}" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="6" TextDecorations="Underline">ultrasound trigger waveform</TextBlock>
+                            <TextBlock Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="4" HorizontalAlignment="Left" VerticalAlignment ="Center">number of lines per US</TextBlock>
+                            <TextBox Grid.Row="3" Grid.Column="6" Name="txtURNumLinesPerUS" Text="{Binding nUROCENumLinesPerUS}" />
+                            <TextBlock Grid.Row="2" Grid.Column="8" Grid.ColumnSpan="4" HorizontalAlignment="Center" VerticalAlignment ="Bottom">index</TextBlock>
+                            <TextBox Grid.Row="3" Grid.Column="8" Name="txtURUSTriggerLineIndex" Text="{Binding nUROCEUSTriggerLineIndex}" />
+                            <CheckBox Grid.Row="4" Grid.Column="2"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment ="Top" Name="chkURAddNoUSFrames" IsChecked="{Binding bUROCEAddNoUSFrames}" >add no US frames</CheckBox>
+                            
+                            <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="5" TextDecorations="Underline">graph display mode</TextBlock>
 
-                            <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="4" TextDecorations="Underline">graph display mode</TextBlock>
-
-                            <RadioButton Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" GroupName="rbUROCEDisplayMode" 
+                            <RadioButton Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="4" GroupName="rbUROCEDisplayMode" 
                                          Checked="rbUROCEDisplayMode_Checked_Intensity">intensity:</RadioButton>
                             <RadioButton Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="9" GroupName="rbUROCEDisplayMode" 
                                          Checked="rbUROCEDisplayMode_Checked_OCE">OCE:</RadioButton>
 
-                            <ComboBox Grid.Row="6" Grid.Column="4" Grid.ColumnSpan="2" Name="cbURIntensityDisplayOptions" SelectedIndex="{Binding nUROCEIntensityDisplayIndex}" IsEnabled="False">
+                            <ComboBox Grid.Row="6" Grid.Column="5" Grid.ColumnSpan="2" Name="cbURIntensityDisplayOptions" SelectedIndex="{Binding nUROCEIntensityDisplayIndex}" IsEnabled="False">
                                 <ComboBoxItem IsSelected="True">all lines</ComboBoxItem>
                                 <ComboBoxItem>even lines</ComboBoxItem>
                                 <ComboBoxItem>odd lines</ComboBoxItem>
                             </ComboBox>
 
-                            <ComboBox Grid.Row="7" Grid.Column="4" Grid.ColumnSpan="2" Name="cbUROCEDisplayOptions" SelectedIndex="{Binding nUROCEOCEDisplayIndex}" IsEnabled="False">
+                            <ComboBox Grid.Row="7" Grid.Column="5" Grid.ColumnSpan="2" Name="cbUROCEDisplayOptions" SelectedIndex="{Binding nUROCEOCEDisplayIndex}" IsEnabled="False">
                                 <ComboBoxItem >strain (um)</ComboBoxItem>
                                 <ComboBoxItem IsSelected="True">dB difference</ComboBoxItem>
                             </ComboBox>
 
 
-                            <TextBlock Grid.Row="9" Grid.Column="1" Text="A-line"/>
-                            <TextBox Grid.Row="9" Grid.Column="2" Name="txtUROCEALine1" Text="{Binding nUROCEAline1}" />
-                            <TextBox Grid.Row="9" Grid.Column="4" Name="txtUROCEALine2" Text="{Binding nUROCEAline2}" />
+                            <TextBlock Grid.Row="9" Grid.Column="1" Text="A-line" Grid.ColumnSpan="2"/>
+                            <TextBox Grid.Row="9" Grid.Column="3" Name="txtUROCEALine1" Text="{Binding nUROCEAline1}" />
+                            <TextBox Grid.Row="9" Grid.Column="5" Name="txtUROCEALine2" Text="{Binding nUROCEAline2}" />
                         </Grid>
                     </TabItem>
 
@@ -1036,14 +1041,13 @@
                         <TextBlock Grid.Column="12" Grid.Row="2">Fast Galvo (Start, Stop) in V</TextBlock>
                         <TextBox Grid.Column="13" Grid.Row="2" Name="txtLLFastGalvoStart" Text="{Binding fLLFastGalvoStart}" />
                         <TextBox Grid.Column="15" Grid.Row="2" Name="txtLLFastGalvoStop" Text="{Binding fLLFastGalvoStop}" />
-                        <TextBlock Grid.Column="12" Grid.Row="3">fast galvo rounding</TextBlock>
-                        <TextBox Grid.Column="13" Grid.ColumnSpan="1" Grid.Row="3" Name="txtLLFastScanRounding" Text="{Binding nLLFastScanRounding}" />
+                        <TextBlock Grid.Column="12" Grid.Row="3">flyback rounding</TextBlock>
+                        <TextBox Grid.Column="13" Grid.ColumnSpan="1" Grid.Row="3" Name="txtLLFastScanRounding" Text="{Binding nLLFastScanRounding}" />                        
                         <TextBlock Grid.Column="12" Grid.Row="4">Slow Galvo (Start, Stop) in V</TextBlock>
                         <TextBox Grid.Column="13" Grid.Row="4" Name="txtLLLLSlowGalvoStart" Text="{Binding fLLSlowGalvoStart}" />
                         <TextBox Grid.Column="15" Grid.Row="4" Name="txtLLSlowGalvoStop" Text="{Binding fLLSlowGalvoStop}" />
-                        <TextBlock Grid.Column="12" Grid.Row="5">dwell (fast, slow)</TextBlock>
-                        <TextBox Grid.Column="13" Grid.Row="5" Name="txtLLDwellFast" Text="{Binding nLLDwellFast}" />
-                        <TextBox Grid.Column="15" Grid.Row="5" Name="txtLLDwellSlow" Text="{Binding nLLDwellSlow}" />
+                        <TextBlock Grid.Column="12" Grid.Row="5" Grid.ColumnSpan="3">lines per position</TextBlock>
+                        <TextBox Grid.Column="13" Grid.ColumnSpan="1" Grid.Row="5" Name="txtLLNumLinesPerPosition" Text="{Binding nLLNumLinesPerPosition}" />
                         <TextBlock Grid.Column="12" Grid.Row="6">Pol Mod (State1, State2) in V</TextBlock>
                         <TextBox Grid.Column="13" Grid.Row="6" Name="txtLLRoundingFast" Text="{Binding nLLRoundingFast}" />
                         <TextBox Grid.Column="15" Grid.Row="6" Name="txtLLRoundingSlow" Text="{Binding nLLRoundingSlow}" />

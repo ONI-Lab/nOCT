@@ -220,6 +220,7 @@ namespace nOCT
                     if (parametername == UIData.name_nULDisplayIndex) UIData.nULDisplayIndex = int.Parse(parametervalue);
                     if (parametername == UIData.name_nULTop) UIData.nULTop = int.Parse(parametervalue);
                     if (parametername == UIData.name_nULLeft) UIData.nULLeft = int.Parse(parametervalue);
+                    if (parametername == UIData.name_nULLeftAvgNumLines) UIData.nULLeftAvgNumLines = int.Parse(parametervalue);
 
                     if (parametername == UIData.name_fULAlazarMax) UIData.fULAlazarMax = float.Parse(parametervalue);
                     if (parametername == UIData.name_fULAlazarMin) UIData.fULAlazarMin = float.Parse(parametervalue);
@@ -242,6 +243,13 @@ namespace nOCT
                     if (parametername == UIData.name_nURDisplayIndex) UIData.nURDisplayIndex = int.Parse(parametervalue);
                     if (parametername == UIData.name_nURIntensityTop) UIData.nURIntensityTop = int.Parse(parametervalue);
                     if (parametername == UIData.name_nURIntensityLeft) UIData.nURIntensityLeft = int.Parse(parametervalue);
+
+                    // OCE 
+                    if (parametername == UIData.name_nUROCENumLinesPerUS) UIData.nUROCENumLinesPerUS = int.Parse(parametervalue);
+                    if (parametername == UIData.name_nUROCEUSTriggerLineIndex) UIData.nUROCEUSTriggerLineIndex = int.Parse(parametervalue);
+                    if (parametername == UIData.name_bUROCEAddNoUSFrames) UIData.bUROCEAddNoUSFrames = bool.Parse(parametervalue);
+
+                    // spectral bining 
                     if (parametername == UIData.name_nURSpectralBinningTop) UIData.nURSpectralBinningTop = int.Parse(parametervalue);
                     if (parametername == UIData.name_nURSpectralBinningLeft) UIData.nURSpectralBinningLeft = int.Parse(parametervalue);
 
@@ -283,6 +291,7 @@ namespace nOCT
                     if (parametername == UIData.name_fLLFastGalvoStart) UIData.fLLFastGalvoStart = float.Parse(parametervalue);
                     if (parametername == UIData.name_fLLFastGalvoStop) UIData.fLLFastGalvoStop = float.Parse(parametervalue);
                     if (parametername == UIData.name_nLLFastScanRounding) UIData.nLLFastScanRounding = int.Parse(parametervalue);
+                    if (parametername == UIData.name_nLLNumLinesPerPosition) UIData.nLLNumLinesPerPosition = int.Parse(parametervalue);
                     if (parametername == UIData.name_fLLSlowGalvoStart) UIData.fLLSlowGalvoStart = float.Parse(parametervalue);
                     if (parametername == UIData.name_fLLSlowGalvoStop) UIData.fLLSlowGalvoStop = float.Parse(parametervalue);
                     if (parametername == UIData.name_nLLDwellFast) UIData.nLLDwellFast = int.Parse(parametervalue);
@@ -364,6 +373,7 @@ namespace nOCT
             sw.WriteLine(UIData.name_fULDAQMin + "=`" + UIData.fULDAQMin + "'");
             sw.WriteLine(UIData.name_nULTop + "=`" + UIData.nULTop + "'");
             sw.WriteLine(UIData.name_nULLeft + "=`" + UIData.nULLeft + "'");
+            sw.WriteLine(UIData.name_nULLeftAvgNumLines + "=`" + UIData.nULLeftAvgNumLines + "'");
             sw.WriteLine(UIData.name_nULIMAQCameraIndex + "=`" + UIData.nULIMAQCameraIndex + "'");
             sw.WriteLine(UIData.name_fULIMAQMax + "=`" + UIData.fULIMAQMax + "'");
             sw.WriteLine(UIData.name_fULIMAQMin + "=`" + UIData.fULIMAQMin + "'");
@@ -377,6 +387,13 @@ namespace nOCT
             sw.WriteLine(UIData.name_nURDisplayIndex + "=`" + UIData.nURDisplayIndex + "'");
             sw.WriteLine(UIData.name_nURIntensityTop + "=`" + UIData.nURIntensityTop + "'");
             sw.WriteLine(UIData.name_nURIntensityLeft + "=`" + UIData.nURIntensityLeft + "'");
+
+            // OCE
+            sw.WriteLine(UIData.name_nUROCENumLinesPerUS + "=`" + UIData.nUROCENumLinesPerUS + "'");
+            sw.WriteLine(UIData.name_nUROCEUSTriggerLineIndex + "=`" + UIData.nUROCEUSTriggerLineIndex + "'");
+            sw.WriteLine(UIData.name_bUROCEAddNoUSFrames + "=`" + UIData.bUROCEAddNoUSFrames + "'");
+
+            // spectral binning
             sw.WriteLine(UIData.name_nURSpectralBinningTop + "=`" + UIData.nURSpectralBinningTop + "'");
             sw.WriteLine(UIData.name_nURSpectralBinningLeft + "=`" + UIData.nURSpectralBinningLeft + "'");
 
@@ -411,6 +428,7 @@ namespace nOCT
             sw.WriteLine(UIData.name_fLLFastGalvoStart + "=`" + UIData.fLLFastGalvoStart + "'");
             sw.WriteLine(UIData.name_fLLFastGalvoStop + "=`" + UIData.fLLFastGalvoStop + "'");
             sw.WriteLine(UIData.name_nLLFastScanRounding + "=`" + UIData.nLLFastScanRounding + "'");
+            sw.WriteLine(UIData.name_nLLNumLinesPerPosition + "=`" + UIData.nLLNumLinesPerPosition + "'");
             sw.WriteLine(UIData.name_fLLSlowGalvoStart + "=`" + UIData.fLLSlowGalvoStart + "'");
             sw.WriteLine(UIData.name_fLLSlowGalvoStop + "=`" + UIData.fLLSlowGalvoStop + "'");
             sw.WriteLine(UIData.name_nLLDwellFast + "=`" + UIData.nLLDwellFast + "'");
@@ -502,7 +520,21 @@ namespace nOCT
                         fMax = fMin + 1.0f;
 
                     #region set left range
-                    axisULLeftHorizontal.Range = new Range<int>(0, threadData.nRawAlineLength - 1);
+                    switch (UIData.nULDisplayIndex)
+                    {
+                        case 0: // Alazar
+                            axisULLeftHorizontal.Range = new Range<int>(0, threadData.nRawAlineLength - 1);
+                            break;
+                        case 1: // DAQ
+                            axisULLeftHorizontal.Range = new Range<int>(0, threadData.nRawAlineLength - 1);
+                            break;
+                        case 2: // IMAQ
+                            axisULLeftHorizontal.Range = new Range<int>(0, threadData.nRawAlineLength - 1);
+                            break;
+                        case 3: // intensity
+                            axisULLeftHorizontal.Range = new Range<int>(0, (threadData.nRawAlineLength >> 1) - 1);
+                            break;
+                    }   // switch (UIData.nULDisplayIndex
                     axisULLeftVertical.Range = new Range<float>(fMin, fMax);
                     #endregion
 
@@ -512,7 +544,21 @@ namespace nOCT
                     #endregion
 
                     #region set main range
-                    axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nRawAlineLength));
+                    switch (UIData.nULDisplayIndex)
+                    {
+                        case 0: // Alazar
+                            axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nRawAlineLength));
+                            break;
+                        case 1: // DAQ
+                            axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nRawAlineLength));
+                            break;
+                        case 2: // IMAQ
+                            axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nRawAlineLength));
+                            break;
+                        case 3: // intensity
+                            axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nRawAlineLength >> 1));
+                            break;
+                    }   // switch (UIData.nULDisplayIndex                    
                     axisULMainHorizontal.Range = new Range<float>(0f, (float)(threadData.nRawNumberAlines));
                     ColorScaleMarker[] csMarker = new ColorScaleMarker[2];
                     csMarker[0].Color = Colors.White;
@@ -538,46 +584,66 @@ namespace nOCT
                 #endregion UL
 
                 #region UR
-                /* Begin: 20211213 editing by JL: UR display */
-                switch (threadData.nProcess2Type)
+                /* Begin: 20230327 editing by JL: UR display */
+                if (UIData.bURChange)
                 {
-                    case 0:
-                        threadData.strProcess2ThreadStatus = "...none...";
-                        break;
-                    case 1:
-                        threadData.strProcess2ThreadStatus = "...intensity...";
-                        break;
-                    case 2:
-                        threadData.strProcess2ThreadStatus = "...attenuation...";
-                        break;
-                    case 3:
-                        threadData.strProcess2ThreadStatus = "...phase...";
-                        break;
-                    case 4:
-                        threadData.strProcess2ThreadStatus = "...polarization...";
-                        break;
-                    case 5:
-                        threadData.strProcess2ThreadStatus = "...angiography...";
-                        break;
-                    case 6:
-                        threadData.strProcess2ThreadStatus = "...elastography...";
+                    switch (threadData.nProcess2Type)
+                    {
+                        case 0:
+                            threadData.strProcess2ThreadStatus = "...none...";
+                            break;
+                        case 1:
+                            threadData.strProcess2ThreadStatus = "...intensity...";
+                            float fMin = 0, fMax = 1;
+                            fMin = UIData.fULIntensityMin;
+                            fMax = UIData.fULIntensityMax;
+                            if (fMin > fMax)
+                                fMax = fMin + 1.0f;
+
+                            // left 
+                            axisURLeftVertical.Range = new Range<float>(fMin, fMax);
+
+                            // top
 
 
-                        axisURMainVertical.Range = new Range<float>(0f, (float)(threadData.nProcessedAlineLength));
-                        axisURMainHorizontal.Range = new Range<float>(0f, (float)(threadData.nRawNumberAlines >> 1));
+                            // main
+                            axisURMainVertical.Range = new Range<float>(0f, (float)(threadData.nProcessedAlineLength));
+                            axisURMainHorizontal.Range = new Range<float>(0f, (float)(threadData.nRawNumberAlines));
 
+                            break;
+                        case 2:
+                            threadData.strProcess2ThreadStatus = "...attenuation...";
+                            break;
+                        case 3:
+                            threadData.strProcess2ThreadStatus = "...phase...";
+                            break;
+                        case 4:
+                            threadData.strProcess2ThreadStatus = "...polarization...";
+                            break;
+                        case 5:
+                            threadData.strProcess2ThreadStatus = "...angiography...";
+                            break;
+                        case 6:
+                            threadData.strProcess2ThreadStatus = "...elastography...";
 
+                            axisURMainVertical.Range = new Range<float>(0f, (float)(threadData.nProcessedAlineLength));
+                            axisURMainHorizontal.Range = new Range<float>(0f, (float)(threadData.nRawNumberAlines >> 1));
 
-                        break;
-                    case 7:
-                        threadData.strProcess2ThreadStatus = "...spectroscopy...";
-                        break;
-                    case 8:
-                        threadData.strProcess2ThreadStatus = "...spectral binning...";
-                        break;
-                }   // switch (nProcess2Type
+                            break;
+                        case 7:
+                            threadData.strProcess2ThreadStatus = "...spectroscopy...";
+                            break;
+                        case 8:
+                            threadData.strProcess2ThreadStatus = "...spectral binning...";
+                            break;
+                    }   // switch (nProcess2Type
 
-                /* End: 20211213 editing by JL: UR display */
+                    /* End: 20230327 editing by JL: UR display */
+
+                    UIData.bURChange = false; 
+                }   // if (UIData.bULChange)
+
+                
 
                 graphURLeft.Refresh();
                 graphURTop.Refresh();
@@ -878,7 +944,21 @@ namespace nOCT
 
             UIData.pfULLeft = new float[4, threadData.nRawAlineLength];
             graphULLeft.DataSource = UIData.pfULLeft;
-            axisULLeftHorizontal.Range = new Range<int>(0, threadData.nRawAlineLength - 1);
+            switch (UIData.nULDisplayIndex)
+            {
+                case 0: // Alazar
+                    axisULLeftHorizontal.Range = new Range<int>(0, threadData.nRawAlineLength - 1);
+                    break;
+                case 1: // DAQ
+                    axisULLeftHorizontal.Range = new Range<int>(0, threadData.nRawAlineLength - 1);
+                    break;
+                case 2: // IMAQ
+                    axisULLeftHorizontal.Range = new Range<int>(0, threadData.nRawAlineLength - 1);
+                    break;
+                case 3: // intensity
+                    axisULLeftHorizontal.Range = new Range<int>(0, (threadData.nRawAlineLength >> 1) - 1);
+                    break;
+            }   // switch (UIData.nULDisplayIndex
             axisULLeftVertical.Range = new Range<float>(fMin, fMax);
 
             UIData.pfULTop = new float[1, threadData.nRawNumberAlines];
@@ -888,7 +968,21 @@ namespace nOCT
 
             UIData.pfULImage = new float[threadData.nRawNumberAlines, threadData.nRawAlineLength];
             graphULMain.DataSource = UIData.pfULImage;
-            axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nRawAlineLength));
+            switch (UIData.nULDisplayIndex)
+            {
+                case 0: // Alazar
+                    axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nRawAlineLength));
+                    break;
+                case 1: // DAQ
+                    axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nRawAlineLength));
+                    break;
+                case 2: // IMAQ
+                    axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nRawAlineLength));
+                    break;
+                case 3: // intensity
+                    axisULMainVertical.Range = new Range<float>(0f, (float)(threadData.nRawAlineLength >> 1));
+                    break;
+            }   // switch (UIData.nULDisplayIndex                    
             axisULMainHorizontal.Range = new Range<float>(0f, (float)(threadData.nRawNumberAlines));
             ColorScaleMarker[] csMarker = new ColorScaleMarker[2];
             csMarker[0].Color = Colors.White;
@@ -906,9 +1000,10 @@ namespace nOCT
             UIData.pfURTop = new float[10, threadData.nProcessedNumberAlines];
             UIData.pfURImage = new float[threadData.nProcessedNumberAlines, threadData.nProcessedAlineLength];
 
+
             graphURLeft.DataSource = UIData.pfURLeft;
             axisURLeftHorizontal.Range = new Range<int>(0, threadData.nProcessedAlineLength - 1);
-            axisURLeftVertical.Range = new Range<float>(0.0f, 16384.0f);
+            axisURLeftVertical.Range = new Range<float>(0.0f, 1.0f);
             graphURTop.DataSource = UIData.pfURTop;
             axisURTopHorizontal.Range = new Range<int>(0, threadData.nProcessedNumberAlines - 1);
             axisURTopVertical.Range = new Range<float>(0.0f, 16384.0f);
@@ -1141,6 +1236,8 @@ namespace nOCT
 
             cbURIntensityDisplayOptions.IsEnabled = true;
             cbUROCEDisplayOptions.IsEnabled = false;
+
+            UIData.bURChange = true;
         }
 
         private void rbUROCEDisplayMode_Checked_OCE(object sender, RoutedEventArgs e)
@@ -1150,7 +1247,9 @@ namespace nOCT
 
             cbURIntensityDisplayOptions.IsEnabled = false;
             cbUROCEDisplayOptions.IsEnabled = true;
-            // int a = 0; 
+            cbUROCEDisplayOptions.SelectedIndex = 1;
+
+            UIData.bURChange = true;
         }
 
         /* End: 20211208 editing by JL */
@@ -1298,15 +1397,29 @@ namespace nOCT
             int nNumberPositions;
             int nNumberTicks = 2 * nNumberLines;
             int nPolarizationStates = 2;
-            int nLinesPerPosition = 2;
-            int nLinesPerUltrasound = 2;
+            int nLinesPerPosition = UIData.nLLNumLinesPerPosition;
+            
+            // OCE 
+            int nLinesPerUltrasound = UIData.nUROCENumLinesPerUS;
+            int nUSTriggerLineIndex = UIData.nUROCEUSTriggerLineIndex;
+            bool bNoUSFrames = UIData.bUROCEAddNoUSFrames;     
 
+            if (nUSTriggerLineIndex >= nLinesPerUltrasound)
+            {
+                nUSTriggerLineIndex = nLinesPerUltrasound - 1;
+                UIData.nUROCEUSTriggerLineIndex = nUSTriggerLineIndex;
+            } // if (nUSTriggerLineIndex >= nLinesPerUltrasound)
 
-
-            bool bAltFrame = false;     // alternating frame mode: frame 1 US-OCE, frame 2 PS-OCT
-
+            if (nLinesPerPosition < nLinesPerUltrasound)
+            {
+                nLinesPerPosition = nLinesPerUltrasound;
+                UIData.nLLNumLinesPerPosition = nLinesPerPosition; 
+            } // if (nLinesPerPosition < nLinesPerUltrasound)
             nNumberPositions = nNumberLines / nLinesPerPosition;
 
+            
+
+            
 
 #if (TRUEDAQ)
             // counter task
@@ -1316,6 +1429,7 @@ namespace nOCT
             taskCtr.COChannels.CreatePulseChannelFrequency("Dev1/ctr0", "ctrClock", COPulseFrequencyUnits.Hertz, COPulseIdleState.Low, 0.0, 2 * dLineTriggerRate, 0.5);
             taskCtr.Timing.ConfigureImplicit(SampleQuantityMode.ContinuousSamples, 1000);
 
+            #region digital waveforms 
             /* Begin: 20220523 editing by JL: add auxiliary trigger line */
 
             // digital task
@@ -1363,16 +1477,17 @@ namespace nOCT
                     digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
             digWFM[i].Signals[0].States[0] = DigitalState.ForceUp;
 
+            /* Begin: 20230327 editing by JL: modify auxiliary trigger line */
             // auxiliary trigger
             i = 3;
             digWFM[i] = new DigitalWaveform(nNumberFrames * nNumberTicks, 1);
-            if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
+            if (bNoUSFrames == false) // alter lines: PS and OCE on the same frame 
             {
                 for (j = 0; j < nNumberFrames; j++)
                 {
                     for (k = 0; k < nNumberTicks; k++)
                     {
-                        if (k % (2 * nLinesPerUltrasound) == 0)
+                        if (k % (2 * nLinesPerUltrasound) == (2 * nUSTriggerLineIndex))
                             digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp;
                         else
                             digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
@@ -1389,12 +1504,20 @@ namespace nOCT
                     {
                         for (k = 0; k < nNumberTicks; k++)
                         {
-                            if (k % 2 == 0)
+                            if (k % (2 * nLinesPerUltrasound) == (2 * nUSTriggerLineIndex))
                                 digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp;
                             else
                                 digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
 
                         }
+
+                        //for (k = 0; k < nNumberTicks; k++)
+                        //{
+                        //    if (k % 2 == 0)
+                        //        digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp;
+                        //    else
+                        //        digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
+                        //}
                     }
                     else // no US on even frames 
                     {
@@ -1405,6 +1528,8 @@ namespace nOCT
                 }
 
             }
+
+            /* End: 20230327 editing by JL: modify auxiliary trigger line */
 
             // analog waveform trigger 
             i = 4;
@@ -1421,53 +1546,9 @@ namespace nOCT
             digWriter.WriteWaveform(false, digWFM);
 
             /* End: 20220523 editing by JL: add auxiliary trigger line */
+            #endregion
 
-
-            //// digital task
-            //Task taskDig = new Task();
-            //DigitalMultiChannelWriter digWriter = new DigitalMultiChannelWriter(taskDig.Stream);
-            //taskDig.DOChannels.CreateChannel("Dev1/port0/line0", "digLineTrigger", ChannelLineGrouping.OneChannelForEachLine);
-            //taskDig.DOChannels.CreateChannel("Dev1/port0/line1", "digFrameTrigger", ChannelLineGrouping.OneChannelForEachLine);
-            //taskDig.DOChannels.CreateChannel("Dev1/port0/line2", "digVolumeTrigger", ChannelLineGrouping.OneChannelForEachLine);
-            ////taskDig.Timing.ConfigureSampleClock("/Dev1/Ctr0InternalOutput", 2 * dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
-            //taskDig.Timing.ConfigureSampleClock("/Dev1/PFI0", dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
-            //taskDig.Control(TaskAction.Verify);
-
-            //DigitalWaveform[] digWFM;
-            //digWFM = new DigitalWaveform[3];
-            //// line trigger
-            //int i = 0, j, k, l;
-            //digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
-            //for (j = 0; j < nNumberFrames; j++)
-            //{
-            //    for (k = 0; k < 2 * nNumberLines; k += 2)
-            //    {
-            //        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown; // j * 2 * nNumberLines
-            //        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k + 1] = DigitalState.ForceUp;
-            //    }
-            //}
-            //// frame trigger
-            //i = 1;
-            //digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
-            //for (j = 0; j < nNumberFrames; j++)
-            //{
-            //    k = 0;
-            //    digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceUp;
-            //    for (k = 1; k < 2 * nNumberLines; k++)
-            //        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown;
-            //}
-
-            //// volume trigger
-            //i = 2;
-            //digWFM[i] = new DigitalWaveform(nNumberFrames * 2 * nNumberLines, 1);
-            //for (j = 0; j < nNumberFrames; j++)
-            //    for (k = 1; k < 2 * nNumberLines; k++)
-            //        digWFM[i].Signals[0].States[j * 2 * nNumberLines + k] = DigitalState.ForceDown;
-            //digWFM[i].Signals[0].States[0] = DigitalState.ForceUp;
-            //// write waveform
-            //digWriter.WriteWaveform(false, digWFM);
-
-
+            #region analog waveforms
             // analog waveform
             Task taskAna = new Task();
             AnalogMultiChannelWriter anaWriter = new AnalogMultiChannelWriter(taskAna.Stream);
@@ -1482,49 +1563,39 @@ namespace nOCT
             double[,] anaWFM = new double[3, nNumberFrames * nNumberLines];
             // fast galvo
             i = 0;
+            int nIndex; 
             for (j = 0; j < nNumberFrames; j++)
             {
                 for (k = 0; k < nNumberPositions; k++)
                 {
                     //for (l = 0; l < nLinesPerPosition; l++)
                     //    anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberPositions;
-
+                    
                     for (l = 0; l < nLinesPerPosition; l++)
                     {
-                        anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberPositions;
+                        nIndex = nLinesPerPosition * k + l;
+                        anaWFM[i, j * nNumberLines + nIndex] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberPositions;
 
-                        if (k < nFastScanRounding)
+                        if (nIndex < nFastScanRounding)
                         {
-                            anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = 0.5 * (fFastGalvoStop - fFastGalvoStart) * Math.Cos(2 * Math.PI * k / (4 * nFastScanRounding) + Math.PI / 2) + (fFastGalvoStop + fFastGalvoStart) / 2;
+                            anaWFM[i, j * nNumberLines + nIndex] = 0.5 * (fFastGalvoStop - fFastGalvoStart) * Math.Cos(2 * Math.PI * nIndex / (4 * nFastScanRounding) + Math.PI / 2) + (fFastGalvoStop + fFastGalvoStart) / 2;
                         }
                         else
                         {
-                            if (k < nNumberPositions - nFastScanRounding)
-                                anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * (k - (nFastScanRounding - 1)) / (nNumberPositions - 2 * nFastScanRounding + 1);
+                            if (nIndex < nNumberLines - nFastScanRounding)
+                                anaWFM[i, j * nNumberLines + nIndex] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * (k - (nFastScanRounding / nLinesPerPosition)) / (nNumberPositions - 2 * nFastScanRounding / nLinesPerPosition);
                             else
-                                anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = 0.5 * (fFastGalvoStop - fFastGalvoStart) * Math.Cos(2 * Math.PI * (k - (nNumberPositions - nFastScanRounding)) / (4 * nFastScanRounding)) + (fFastGalvoStop + fFastGalvoStart) / 2;
+                                anaWFM[i, j * nNumberLines + nIndex] = 0.5 * (fFastGalvoStop - fFastGalvoStart) * Math.Cos(2 * Math.PI * (nIndex - (nNumberLines - nFastScanRounding)) / (4 * nFastScanRounding)) + (fFastGalvoStop + fFastGalvoStart) / 2;
                         }
 
                     }
-
                 }
             }
-
-            //for (j = 0; j < nNumberFrames; j++)
-            //{
-            //    for (k = 0; k < nNumberLinesPerState; k++)
-            //    {
-            //        for (l = 0; l < 4; l++)
-            //        {
-            //            anaWFM[i, j * nNumberLines + 4 * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberLinesPerState;
-            //        }
-            //    }
-            //}
 
 
             // slow galvo
             i = 1;
-            if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
+            if (bNoUSFrames == false) // alter lines: PS and OCE on the same frame 
             {
                 for (j = 0; j < nNumberFrames; j++)
                 {
@@ -1555,18 +1626,10 @@ namespace nOCT
                 }
             }
 
-            //for (j = 0; j < nNumberFrames; j++)
-            //{
-            //    for (k = 0; k < nNumberLines; k++)
-            //    {
-            //        anaWFM[i, j * nNumberLines + k] = fSlowGalvoStart + (fSlowGalvoStop - fSlowGalvoStart) * j / nNumberFrames;
-            //    }
-            //}
-
 
             // pol mod
             i = 2;
-            if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
+            if (bNoUSFrames == false) // alter lines: PS and OCE on the same frame 
             {
                 for (j = 0; j < nNumberFrames; j++)
                 {
@@ -1591,34 +1654,25 @@ namespace nOCT
                     {
                         for (k = 0; k < nNumberLines; k++)
                         {
-                            anaWFM[i, j * nNumberLines + k] = nPolModState2;
+                            // anaWFM[i, j * nNumberLines + k] = nPolModState2;
                         }
                     }
                     else // no US on even frames 
                     {
                         for (k = 0; k < nNumberLines; k += nLinesPerPosition)
                         {
-                            anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
-                            anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
-                            anaWFM[i, j * nNumberLines + k + 2] = nPolModState2;
-                            anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
+                            //anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
+                            //anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
+                            //anaWFM[i, j * nNumberLines + k + 2] = nPolModState2;
+                            //anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
                         }
                     }
                 }
             }
-            //for (j = 0; j < nNumberFrames; j++)
-            //{
-            //    for (k = 0; k < nNumberLines; k += 4)
-            //    {
-            //        anaWFM[i, j * nNumberLines + k] = nPolModState1;
-            //        anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
-            //        anaWFM[i, j * nNumberLines + k + 2] = nPolModState2;
-            //        anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
-            //    }
-            //}
 
 
             anaWriter.WriteMultiSample(false, anaWFM);
+            #endregion
 #endif
 
             // set up wait handles to start
@@ -1666,7 +1720,24 @@ namespace nOCT
                         nPolModState1 = UIData.nLLRoundingFast;
                         nPolModState2 = UIData.nLLRoundingSlow;
                         nFastScanRounding = UIData.nLLFastScanRounding;
+                        nLinesPerPosition = UIData.nLLNumLinesPerPosition;
 
+                        // OCE 
+                        nLinesPerUltrasound = UIData.nUROCENumLinesPerUS;
+                        nUSTriggerLineIndex = UIData.nUROCEUSTriggerLineIndex;
+
+                        if (nUSTriggerLineIndex >= nLinesPerUltrasound)
+                        {
+                            nUSTriggerLineIndex = nLinesPerUltrasound - 1;
+                            UIData.nUROCEUSTriggerLineIndex = nUSTriggerLineIndex;
+                        } // if (nUSTriggerLineIndex >= nLinesPerUltrasound)
+
+                        if (nLinesPerPosition < nLinesPerUltrasound)
+                        {
+                            nLinesPerPosition = nLinesPerUltrasound;
+                            UIData.nLLNumLinesPerPosition = nLinesPerPosition;
+                        } // if (nLinesPerPosition < nLinesPerUltrasound)
+                        nNumberPositions = nNumberLines / nLinesPerPosition;
 
                     } // if(threadData.mreOutputUpdate.WaitOne(0) == true)
                     /* End: 20210501 editing by JL */
@@ -1675,6 +1746,7 @@ namespace nOCT
                     threadData.strOutputThreadStatus = "updating...";
 
 #if (TRUEDAQ)
+                    #region analog waveforms (update)
                     // fast galvo
                     i = 0;
                     for (j = 0; j < nNumberFrames; j++)
@@ -1686,27 +1758,27 @@ namespace nOCT
 
                             for (l = 0; l < nLinesPerPosition; l++)
                             {
-                                anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberPositions;
+                                nIndex = nLinesPerPosition * k + l;
+                                anaWFM[i, j * nNumberLines + nIndex] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * k / nNumberPositions;
 
-                                if (k < nFastScanRounding)
+                                if (nIndex < nFastScanRounding)
                                 {
-                                    anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = 0.5 * (fFastGalvoStop - fFastGalvoStart) * Math.Cos(2 * Math.PI * k / (4 * nFastScanRounding) + Math.PI / 2) + (fFastGalvoStop + fFastGalvoStart) / 2;
+                                    anaWFM[i, j * nNumberLines + nIndex] = 0.5 * (fFastGalvoStop - fFastGalvoStart) * Math.Cos(2 * Math.PI * nIndex / (4 * nFastScanRounding) + Math.PI / 2) + (fFastGalvoStop + fFastGalvoStart) / 2;
                                 }
                                 else
                                 {
-                                    if (k < nNumberPositions - nFastScanRounding)
-                                        anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * (k - (nFastScanRounding - 1)) / (nNumberPositions - 2 * nFastScanRounding + 1);
+                                    if (nIndex < nNumberLines - nFastScanRounding)
+                                        anaWFM[i, j * nNumberLines + nIndex] = fFastGalvoStart + (fFastGalvoStop - fFastGalvoStart) * (k - (nFastScanRounding / nLinesPerPosition)) / (nNumberPositions - 2 * nFastScanRounding / nLinesPerPosition);
                                     else
-                                        anaWFM[i, j * nNumberLines + nLinesPerPosition * k + l] = 0.5 * (fFastGalvoStop - fFastGalvoStart) * Math.Cos(2 * Math.PI * (k - (nNumberPositions - nFastScanRounding)) / (4 * nFastScanRounding)) + (fFastGalvoStop + fFastGalvoStart) / 2;
+                                        anaWFM[i, j * nNumberLines + nIndex] = 0.5 * (fFastGalvoStop - fFastGalvoStart) * Math.Cos(2 * Math.PI * (nIndex - (nNumberLines - nFastScanRounding)) / (4 * nFastScanRounding)) + (fFastGalvoStop + fFastGalvoStart) / 2;
                                 }
 
                             }
-
                         }
                     }
                     // slow galvo
                     i = 1;
-                    if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
+                    if (bNoUSFrames == false) // alter lines: PS and OCE on the same frame 
                     {
                         for (j = 0; j < nNumberFrames; j++)
                         {
@@ -1739,7 +1811,7 @@ namespace nOCT
 
                     // pol mod
                     i = 2;
-                    if (bAltFrame == false) // alter lines: PS and OCE on the same frame 
+                    if (bNoUSFrames == false) // alter lines: PS and OCE on the same frame 
                     {
                         for (j = 0; j < nNumberFrames; j++)
                         {
@@ -1764,23 +1836,24 @@ namespace nOCT
                             {
                                 for (k = 0; k < nNumberLines; k++)
                                 {
-                                    anaWFM[i, j * nNumberLines + k] = nPolModState2;
+                                    // anaWFM[i, j * nNumberLines + k] = nPolModState2;
                                 }
                             }
                             else // no US on even frames 
                             {
                                 for (k = 0; k < nNumberLines; k += nLinesPerPosition)
                                 {
-                                    anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
-                                    anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
-                                    anaWFM[i, j * nNumberLines + k + 2] = nPolModState2;
-                                    anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
+                                    //anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
+                                    //anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
+                                    //anaWFM[i, j * nNumberLines + k + 2] = nPolModState2;
+                                    //anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
                                 }
                             }
                         }
                     }
 
                     anaWriter.BeginWriteMultiSample(false, anaWFM, null, null);
+                    #endregion
 #endif
 
                     threadData.strOutputThreadStatus = "idle...";
@@ -3189,6 +3262,8 @@ namespace nOCT
                                         }   // switch (UIData.nLLSystemType
                                         break;
                                     case 3: // intensity
+
+
                                         break;
                                 }   // switch (UIData.nULDisplayIndex
 
@@ -4844,12 +4919,92 @@ namespace nOCT
 
                             Thread.Sleep(10);
 
+                            // common variables
+                            int nLine, nLineOffset, nHalfLineOffset;
+                            int nProcessedAlineLength = threadData.nProcessedAlineLength;
+                            float[] pfHalfR = new float[nNumberSets * nNumberLinesPerSet * nProcessedAlineLength];
+                            float[] pfHalfI = new float[nNumberSets * nNumberLinesPerSet * nProcessedAlineLength];
+
                             switch (threadData.nProcess2Type)
                             {
                                 case 0:  // none
                                     break;
                                 case 1:  // intensity
                                     // copy results to pnProcess2 data structures
+                                    #region copy data to process 2 intensity
+                                    /* Begin: 20230327 editing by JL */
+
+                                    for (nLine = 0; nLine < nNumberLinesPerSet * nNumberSets; nLine++)
+                                    {
+                                        nLineOffset = nLine * nLineLength;
+                                        nHalfLineOffset = nLine * nProcessedAlineLength;
+                                        for (nPoint = 0; nPoint < nProcessedAlineLength; nPoint++)
+                                        {
+                                            pfHalfR[nHalfLineOffset + nPoint] = pfR[nLineOffset + nPoint];
+                                            pfHalfI[nHalfLineOffset + nPoint] = pfI[nLineOffset + nPoint];
+                                        }
+                                    }
+                                    switch (UIData.nLLSystemType)
+                                    {
+                                        case 0: // SD-OCT
+                                            // new float[threadData.nProcessedNumberAlines * threadData.nProcessedAlineLength]
+                                            Buffer.BlockCopy(pfHalfR, 0, threadData.pfProcess2ComplexRealParallel, 0, nNumberSets * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                            Buffer.BlockCopy(pfHalfI, 0, threadData.pfProcess2ComplexImagParallel, 0, nNumberSets * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                            Array.Clear(pfHalfR, 0, pfHalfR.Length);
+                                            Array.Clear(pfHalfI, 0, pfHalfI.Length);
+                                            break;
+                                        case 1: // PS SD-OCT
+                                            // put even and odd lines back to one frame 
+                                            float[] pfParallelHalfR = new float[(nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength];
+                                            float[] pfPerpendicularHalfR = new float[(nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength];
+                                            float[] pfParallelHalfI = new float[(nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength];
+                                            float[] pfPerpendicularHalfI = new float[(nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength];
+                                            int nLineOffsetParallelEven, nLineOffsetParallelOdd, nLineOffsetPerpendicularEven, nLineOffsetPerpendicularOdd;
+
+                                            for (nLine = 0; nLine < nNumberLinesPerSet; nLine++)
+                                            {
+                                                nLineOffsetParallelEven = (nLine + 0 * nNumberLinesPerSet) * nProcessedAlineLength;
+                                                nLineOffsetParallelOdd = (nLine + 1 * nNumberLinesPerSet) * nProcessedAlineLength;
+                                                nLineOffsetPerpendicularEven = (nLine + 2 * nNumberLinesPerSet) * nProcessedAlineLength;
+                                                nLineOffsetPerpendicularOdd = (nLine + 3 * nNumberLinesPerSet) * nProcessedAlineLength;
+                                                for (nPoint = 0; nPoint < nProcessedAlineLength; nPoint++)
+                                                {
+                                                    pfParallelHalfR[2 * nLine * nProcessedAlineLength + nPoint] = pfHalfR[nLineOffsetParallelEven + nPoint];
+                                                    pfParallelHalfR[(2 * nLine + 1) * nProcessedAlineLength + nPoint] = pfHalfR[nLineOffsetParallelOdd + nPoint];
+                                                    pfPerpendicularHalfR[2 * nLine * nProcessedAlineLength + nPoint] = pfHalfR[nLineOffsetPerpendicularEven + nPoint];
+                                                    pfPerpendicularHalfR[(2 * nLine + 1) * nProcessedAlineLength + nPoint] = pfHalfR[nLineOffsetPerpendicularOdd + nPoint];
+
+                                                    pfParallelHalfI[2 * nLine * nProcessedAlineLength + nPoint] = pfHalfI[nLineOffsetParallelEven + nPoint];
+                                                    pfParallelHalfI[(2 * nLine + 1) * nProcessedAlineLength + nPoint] = pfHalfI[nLineOffsetParallelOdd + nPoint];
+                                                    pfPerpendicularHalfI[2 * nLine * nProcessedAlineLength + nPoint] = pfHalfI[nLineOffsetPerpendicularEven + nPoint];
+                                                    pfPerpendicularHalfI[(2 * nLine + 1) * nProcessedAlineLength + nPoint] = pfHalfI[nLineOffsetPerpendicularOdd + nPoint];
+                                                }
+                                            }
+
+                                            Buffer.BlockCopy(pfParallelHalfR, 0, threadData.pfProcess2ComplexRealParallel, 0, (nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                            Buffer.BlockCopy(pfParallelHalfI, 0, threadData.pfProcess2ComplexImagParallel, 0, (nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                            Buffer.BlockCopy(pfPerpendicularHalfR, 0, threadData.pfProcess2ComplexRealPerpendicular, 0, (nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                            Buffer.BlockCopy(pfPerpendicularHalfI, 0, threadData.pfProcess2ComplexImagPerpendicular, 0, (nNumberSets >> 1) * nNumberLinesPerSet * nProcessedAlineLength * sizeof(float));
+                                            Array.Clear(pfHalfR, 0, pfHalfR.Length);
+                                            Array.Clear(pfHalfI, 0, pfHalfI.Length);
+                                            Array.Clear(pfParallelHalfR, 0, pfParallelHalfR.Length);
+                                            Array.Clear(pfParallelHalfI, 0, pfParallelHalfI.Length);
+                                            Array.Clear(pfPerpendicularHalfR, 0, pfPerpendicularHalfR.Length);
+                                            Array.Clear(pfPerpendicularHalfR, 0, pfPerpendicularHalfR.Length);
+                                            break;
+                                        case 2: // line field
+                                            break;
+                                        case 3: // OFDI
+
+                                            break;
+                                        case 4: // PS OFDI
+                                            break;
+                                    }   // switch (UIData.nLLSystemType
+
+
+                                    /* End: 20230327 editing by JL */
+
+                                    #endregion
                                     break;
                                 case 2:  // attenuation
                                     // copy results to pnProcess2 data structures
@@ -4864,14 +5019,10 @@ namespace nOCT
                                     // copy results to pnProcess2 data structures
                                     break;
                                 case 6:  // elastography
-                                         // copy results to pnProcess2 data structures
-
+                                    // copy results to pnProcess2 data structures
+                                    #region copy data to process 2 elastography
                                     /* Begin: 20211208 editing by JL */
 
-                                    int nLine, nLineOffset, nHalfLineOffset;
-                                    int nProcessedAlineLength = threadData.nProcessedAlineLength;
-                                    float[] pfHalfR = new float[nNumberSets * nNumberLinesPerSet * nProcessedAlineLength];
-                                    float[] pfHalfI = new float[nNumberSets * nNumberLinesPerSet * nProcessedAlineLength];
                                     for (nLine = 0; nLine < nNumberLinesPerSet * nNumberSets; nLine++)
                                     {
                                         nLineOffset = nLine * nLineLength;
@@ -4941,7 +5092,7 @@ namespace nOCT
 
 
                                     /* End: 20211208 editing by JL */
-
+                                    #endregion
                                     break;
                                 case 7:  // spectroscopy
                                     // copy results to pnProcess2 data structures
@@ -5057,14 +5208,28 @@ namespace nOCT
                                             pfLine[nPoint] += pfR[nLineOffset + nPoint] * pfR[nLineOffset + nPoint] + pfI[nLineOffset + nPoint] * pfI[nLineOffset + nPoint];
                                     }   // if (pbCalibrationLine
                                 }   // for (nCalibrationLine
+
+                                /* Begin: 20211211 editing by JL: halve the vertical display */
                                 for (nPoint = 0; nPoint < nLineLength >> 1; nPoint++)
                                 {
                                     for (nDoubler = 0; nDoubler < nDoubleLines; nDoubler++)
                                     {
-                                        UIData.pfULImage[nDoubleLines * nLine + nDoubler, 2 * nPoint + 0] = (float)(10.0 * Math.Log10(pfLine[nPoint]));
+                                        //UIData.pfULImage[nDoubleLines * nLine + nDoubler, 2 * nPoint + 0] = (float)(10.0 * Math.Log10(pfLine[nPoint]));
                                         //UIData.pfULImage[nDoubleLines * nLine + nDoubler, 2 * nPoint + 1] = UIData.pfULImage[nLine, 2 * nPoint + 0];
+                                        UIData.pfULImage[nDoubleLines * nLine + nDoubler, nPoint + 0] = (float)(10.0 * Math.Log10(pfLine[nPoint]));
                                     }   // for (nDoubler
                                 }
+                                /* End: 20211211 editing by JL */
+
+                                //for (nPoint = 0; nPoint < nLineLength >> 1; nPoint++)
+                                //{
+                                //    for (nDoubler = 0; nDoubler < nDoubleLines; nDoubler++)
+                                //    {
+                                //        UIData.pfULImage[nDoubleLines * nLine + nDoubler, 2 * nPoint + 0] = (float)(10.0 * Math.Log10(pfLine[nPoint]));
+                                //        //UIData.pfULImage[nDoubleLines * nLine + nDoubler, 2 * nPoint + 1] = UIData.pfULImage[nLine, 2 * nPoint + 0];
+                                //    }   // for (nDoubler
+                                //}
+
                             }   // for (nLine
 
                             #endregion main
@@ -5077,21 +5242,30 @@ namespace nOCT
                             //    UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
 
                             nAline = UIData.nULLeft;
-                            int nHalfAvgLineNumber = 300;
+                            int nHalfAvgLineNumber = UIData.nULLeftAvgNumLines >> 1;
                             float fSum, fAvg;
                             if (nAline < 0) nAline = 0;
                             if (nAline >= threadData.nRawNumberAlines) nAline = threadData.nRawNumberAlines - 1;
-                            for (nPoint = 0; nPoint < threadData.nRawAlineLength; nPoint++)
+                            if (nHalfAvgLineNumber > 1)
                             {
-                                // UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
-                                fSum = 0.0f;
-                                for (int i = 0; i < 2 * nHalfAvgLineNumber; i++)
+                                for (nPoint = 0; nPoint < threadData.nProcessedAlineLength; nPoint++)
                                 {
-                                    fSum += UIData.pfULImage[nAline - nHalfAvgLineNumber + i, nPoint];
+                                    // UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
+                                    fSum = 0.0f;
+                                    for (int i = 0; i < 2 * nHalfAvgLineNumber; i++)
+                                    {
+                                        fSum += UIData.pfULImage[nAline - nHalfAvgLineNumber + i, nPoint];
+                                    }
+                                    fAvg = fSum / (2 * nHalfAvgLineNumber);
+                                    UIData.pfULLeft[0, nPoint] = fAvg;
                                 }
-                                fAvg = fSum / (2 * nHalfAvgLineNumber);
-                                UIData.pfULLeft[0, nPoint] = fAvg;
                             }
+                            else
+                            {
+                                for (nPoint = 0; nPoint < threadData.nProcessedAlineLength; nPoint++)
+                                    UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
+                            }
+
                             #endregion
 
                             #region top
@@ -5258,6 +5432,11 @@ namespace nOCT
                                 break;
                             case 1:
                                 threadData.strProcess2ThreadStatus = "...intensity...";
+                                /* Begin: 20230327 editing by JL */
+                                // Array.Clear(UIData.pfURImage, 0, UIData.pfURImage.Length); 
+                                Buffer.BlockCopy(threadData.pfProcess2ComplexRealParallel, 0, pfProcessedR, 0, nProcessedLineLength * nProcessedNumberLines * sizeof(float));
+                                Buffer.BlockCopy(threadData.pfProcess2ComplexImagParallel, 0, pfProcessedI, 0, nProcessedLineLength * nProcessedNumberLines * sizeof(float));
+                                /* End: 20230327 editing by JL */
                                 break;
                             case 2:
                                 threadData.strProcess2ThreadStatus = "...attenuation...";
@@ -5302,6 +5481,53 @@ namespace nOCT
                                 break;
                             case 1:
                                 threadData.strProcess2ThreadStatus = "...intensity...";
+                                /* Begin: 20230327 editing by JL */
+
+                                // actual intensity processing
+                                #region main
+                                for (nAline = 0; nAline < nProcessedNumberLines; nAline++)
+                                {
+                                    int nLineOffset = nAline * nProcessedLineLength;
+                                    for (nPoint = 0; nPoint < nProcessedLineLength; nPoint++)
+                                    {
+                                        pfLine[nPoint] = pfProcessedR[nLineOffset + nPoint] * pfProcessedR[nLineOffset + nPoint] + pfProcessedI[nLineOffset + nPoint] * pfProcessedI[nLineOffset + nPoint];
+                                        // UIData.pfURImage[nAline, nPoint] = (float)(10.0 * Math.Log10(pfLine[nPoint])); 
+                                        pfdB[nAline, nPoint] = (float)(10.0 * Math.Log10(pfLine[nPoint]));
+                                    }
+                                }
+
+                                Buffer.BlockCopy(pfdB, 0, UIData.pfURImage, 0, pfdB.Length * sizeof(float));
+                                #endregion
+
+                                #region left
+                                
+                                nAline = UIData.nULLeft;
+                                int nHalfAvgLineNumber = UIData.nULLeftAvgNumLines >> 1;                                
+                                float fSum, fAvg;
+                                if (nAline < 0) nAline = 0;
+                                if (nAline >= threadData.nRawNumberAlines) nAline = threadData.nRawNumberAlines - 1;
+                                if (nHalfAvgLineNumber > 1)
+                                {
+                                    for (nPoint = 0; nPoint < threadData.nProcessedAlineLength; nPoint++)
+                                    {
+                                        // UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
+                                        fSum = 0.0f;
+                                        for (int i = 0; i < 2 * nHalfAvgLineNumber; i++)
+                                        {
+                                            fSum += UIData.pfULImage[nAline - nHalfAvgLineNumber + i, nPoint];
+                                        }
+                                        fAvg = fSum / (2 * nHalfAvgLineNumber);
+                                        UIData.pfURLeft[0, nPoint] = fAvg;
+                                    }
+                                }
+                                else
+                                {
+                                    for (nPoint = 0; nPoint < threadData.nProcessedAlineLength; nPoint++)
+                                        UIData.pfURLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
+                                }
+                                #endregion
+
+                                /* End: 20230327 editing by JL */
 
                                 break;
                             case 2:
@@ -5320,7 +5546,6 @@ namespace nOCT
                                 threadData.strProcess2ThreadStatus = "...elastography...";
 
                                 /* Begin: 20211211 editing by JL */
-
 
                                 // actual elastography processing
                                 for (nAline = 0; nAline < nProcessedNumberLines; nAline++)
@@ -5385,7 +5610,7 @@ namespace nOCT
                                 break;
                             case 8:
                                 threadData.strProcess2ThreadStatus = "...spectral binning...";
-
+                                #region spectral binning
                                 // actual processing
                                 Thread.Sleep(3000);
 
@@ -5407,6 +5632,7 @@ namespace nOCT
                                 for (nAline = 0; nAline < threadData.nProcessedNumberAlines; nAline++)
                                     UIData.pfURTop[0, nAline] = UIData.pfURImage[nAline, nPoint];
 
+                                #endregion
                                 break;
                         }   // switch (nProcess2Type
 
@@ -5561,6 +5787,11 @@ namespace nOCT
         private void btnUpdateUL_Click(object sender, RoutedEventArgs e)
         {
             UIData.bULChange = true;
+        }
+
+        private void btnUpdateUR_Click(object sender, RoutedEventArgs e)
+        {
+            UIData.bURChange = true;
         }
 
         private void btnCalibrationFileLoad_Click(object sender, RoutedEventArgs e)
@@ -5736,6 +5967,14 @@ namespace nOCT
             set { _nULLeft = value; OnPropertyChanged(name_nULLeft); }
         }   // public int nULLeft
 
+        public string name_nULLeftAvgNumLines = "nULLeftAvgNumLines";
+        private int _nULLeftAvgNumLines;
+        public int nULLeftAvgNumLines
+        {
+            get { return _nULLeftAvgNumLines; }
+            set { _nULLeftAvgNumLines = value; OnPropertyChanged(name_nULLeftAvgNumLines); }
+        }   // public int nULLeftAvgNumLines
+
         #endregion left
 
         #region alazar
@@ -5858,6 +6097,8 @@ namespace nOCT
 
         #region UR
 
+        public bool bURChange = false;
+
         public string name_nURDisplayIndex = "nURDisplayIndex";
         private int _nURDisplayIndex;
         public int nURDisplayIndex
@@ -5892,7 +6133,9 @@ namespace nOCT
         }   // public int nURIntensityCUDA
         /* End: 20201210 editing by JL */
 
+        #region oce
         /* Begin: 20201213 editing by JL: elastography UI on UR */
+
         public int nUROCEDisplayModeRadioButtonIndex = -1;
 
         public string name_nUROCEIntensityDisplayIndex = "nUROCEIntensityDisplayIndex";
@@ -5913,6 +6156,37 @@ namespace nOCT
 
 
         /* End: 20201213 editing by JL */
+
+        /* Begin: 20230327 editing by JL: add different ultrasound trigger mode */
+
+        public string name_nUROCENumLinesPerUS = "nUROCENumLinesPerUS";
+        private int _nUROCENumLinesPerUS;
+        public int nUROCENumLinesPerUS
+        {
+            get { return _nUROCENumLinesPerUS; }
+            set { _nUROCENumLinesPerUS = value; OnPropertyChanged(name_nUROCENumLinesPerUS); }
+        }   // public int nUROCENumLinesPerUS
+
+        public string name_nUROCEUSTriggerLineIndex = "nUROCEUSTriggerLineIndex";
+        private int _nUROCEUSTriggerLineIndex;
+        public int nUROCEUSTriggerLineIndex
+        {
+            get { return _nUROCEUSTriggerLineIndex; }
+            set { _nUROCEUSTriggerLineIndex = value; OnPropertyChanged(name_nUROCEUSTriggerLineIndex); }
+        }   // public int nUROCEUSTriggerLineIndex
+
+        public string name_bUROCEAddNoUSFrames = "bUROCEAddNoUSFrames";
+        private bool _bUROCEAddNoUSFrames;
+        public bool bUROCEAddNoUSFrames
+        {
+            get { return _bUROCEAddNoUSFrames; }
+            set { _bUROCEAddNoUSFrames = value; OnPropertyChanged(name_bUROCEAddNoUSFrames); }
+        }   // public bool bUROCEAddNoUSFrames
+
+        /* End: 20230327 editing by JL */
+
+
+        #endregion
 
 
         public string name_nURSpectralBinningTop = "nURSpectralBinningTop";
@@ -6149,7 +6423,15 @@ namespace nOCT
         {
             get { return _nLLFastScanRounding; }
             set { _nLLFastScanRounding = value; OnPropertyChanged(name_nLLFastScanRounding); }
-        }   // public float nLLFastScanRounding
+        }   // public int nLLFastScanRounding
+
+        public string name_nLLNumLinesPerPosition = "nLLNumLinesPerPosition";
+        private int _nLLNumLinesPerPosition;
+        public int nLLNumLinesPerPosition
+        {
+            get { return _nLLNumLinesPerPosition; }
+            set { _nLLNumLinesPerPosition = value; OnPropertyChanged(name_nLLNumLinesPerPosition); }
+        }   // public int nLLNumLinesPerPosition
 
         public string name_fLLSlowGalvoStart = "fLLSlowGalvoStart";
         private float _fLLSlowGalvoStart;
