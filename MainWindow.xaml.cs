@@ -486,6 +486,11 @@ namespace nOCT
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
+            int bits = IntPtr.Size * 8;
+
+            Console.WriteLine("{0}-bit, bits");
+            Console.ReadLine(); 
+
             if (UIData.nConfigState == 1)
             {
                 #region UL
@@ -580,6 +585,7 @@ namespace nOCT
                     graphULTop.Refresh();
                 if (UIData.bULMainActive)
                     graphULMain.Refresh();
+
 
                 #endregion UL
 
@@ -1004,9 +1010,11 @@ namespace nOCT
             graphURLeft.DataSource = UIData.pfURLeft;
             axisURLeftHorizontal.Range = new Range<int>(0, threadData.nProcessedAlineLength - 1);
             axisURLeftVertical.Range = new Range<float>(0.0f, 1.0f);
+
             graphURTop.DataSource = UIData.pfURTop;
             axisURTopHorizontal.Range = new Range<int>(0, threadData.nProcessedNumberAlines - 1);
             axisURTopVertical.Range = new Range<float>(0.0f, 16384.0f);
+
             graphURMain.DataSource = UIData.pfURImage;
 
             #endregion UR
@@ -1206,6 +1214,8 @@ namespace nOCT
         {
             #region threads
             threadData.mreMainRun.Set();
+            UIData.bULChange = true;
+            UIData.bURChange = true;
             #endregion
         }
 
@@ -1488,9 +1498,9 @@ namespace nOCT
                     for (k = 0; k < nNumberTicks; k++)
                     {
                         if (k % (2 * nLinesPerUltrasound) == (2 * nUSTriggerLineIndex))
-                            digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp;
-                        else
                             digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
+                        else
+                            digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp;
 
                     }
                 }
@@ -1505,9 +1515,9 @@ namespace nOCT
                         for (k = 0; k < nNumberTicks; k++)
                         {
                             if (k % (2 * nLinesPerUltrasound) == (2 * nUSTriggerLineIndex))
-                                digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp;
-                            else
                                 digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
+                            else
+                                digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp;
 
                         }
 
@@ -1554,13 +1564,21 @@ namespace nOCT
             AnalogMultiChannelWriter anaWriter = new AnalogMultiChannelWriter(taskAna.Stream);
             taskAna.AOChannels.CreateVoltageChannel("Dev1/ao0", "anaGalvoFast", -5.0, +5.0, AOVoltageUnits.Volts);
             taskAna.AOChannels.CreateVoltageChannel("Dev1/ao1", "anaGalvoSlow", -5.0, +5.0, AOVoltageUnits.Volts);
+
+            // MEMS flip
+            //taskAna.AOChannels.CreateVoltageChannel("Dev1/ao1", "anaGalvoFast", -5.0, +5.0, AOVoltageUnits.Volts);
+            //taskAna.AOChannels.CreateVoltageChannel("Dev1/ao0", "anaGalvoSlow", -5.0, +5.0, AOVoltageUnits.Volts);
+
+
             taskAna.AOChannels.CreateVoltageChannel("Dev1/ao2", "anaPolMod", -10.0, +10.0, AOVoltageUnits.Volts);
-            taskAna.Timing.ConfigureSampleClock("/Dev1/PFI0", dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
+            taskAna.AOChannels.CreateVoltageChannel("Dev1/ao3", "anaUS", -10.0, +10.0, AOVoltageUnits.Volts);
+            // taskAna.Timing.ConfigureSampleClock("/Dev1/PFI0", dLineTriggerRate, SampleClockActiveEdge.Rising, SampleQuantityMode.ContinuousSamples);
+            taskAna.Timing.ConfigureSampleClock("/Dev1/PFI0", dLineTriggerRate, SampleClockActiveEdge.Falling, SampleQuantityMode.ContinuousSamples);
             taskAna.Triggers.StartTrigger.ConfigureDigitalEdgeTrigger("/Dev1/PFI1", DigitalEdgeStartTriggerEdge.Rising);
             //taskAna.Triggers.StartTrigger.ConfigureAnalogEdgeTrigger("/Dev1/ai0", AnalogEdgeStartTriggerSlope.Rising, 1.0); 
 
 
-            double[,] anaWFM = new double[3, nNumberFrames * nNumberLines];
+            double[,] anaWFM = new double[4, nNumberFrames * nNumberLines];
             // fast galvo
             i = 0;
             int nIndex; 
@@ -1629,22 +1647,31 @@ namespace nOCT
 
             // pol mod
             i = 2;
+            for (j = 0; j < nNumberFrames; j++)
+            {
+                for (k = 0; k < nNumberLines; k++)
+                {
+                    anaWFM[i, j * nNumberLines + k] = nPolModState1;
+                }
+            }
+
+            // US 
+            i = 3;
+            // anaWFM[i] = new DigitalWaveform(nNumberFrames * nNumberTicks, 1);
             if (bNoUSFrames == false) // alter lines: PS and OCE on the same frame 
             {
                 for (j = 0; j < nNumberFrames; j++)
                 {
-                    for (k = 0; k < nNumberLines; k += nLinesPerPosition)
+                    for (k = 0; k < nNumberLines; k++)
                     {
-                        anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
-                        //anaWFM[i, j * nNumberLines + k + 1] = nPolModState2;
-                        //anaWFM[i, j * nNumberLines + k + 2] = nPolModState1;
-                        //anaWFM[i, j * nNumberLines + k + 3] = nPolModState1;
-                        //anaWFM[i, j * nNumberLines + k + 4] = nPolModState2;
-                        //anaWFM[i, j * nNumberLines + k + 5] = nPolModState2;
-                        //anaWFM[i, j * nNumberLines + k + 6] = nPolModState2;
-                        //anaWFM[i, j * nNumberLines + k + 7] = nPolModState2;
+                        if (k % (nLinesPerUltrasound) == (nUSTriggerLineIndex))
+                            anaWFM[i, j * nNumberLines + k] = 5.0;
+                        else
+                            anaWFM[i, j * nNumberLines + k] = 0.0;
+
                     }
                 }
+
             }
             else // alter frames: PS and OCE on alternating frames 
             {
@@ -1654,22 +1681,30 @@ namespace nOCT
                     {
                         for (k = 0; k < nNumberLines; k++)
                         {
-                            // anaWFM[i, j * nNumberLines + k] = nPolModState2;
+                            if (k % (2 * nLinesPerUltrasound) == (2 * nUSTriggerLineIndex))
+                                anaWFM[i, j * nNumberLines + k] = 5.0;
+                            else
+                                anaWFM[i, j * nNumberLines + k] = 0.0;
+
                         }
+
+                        //for (k = 0; k < nNumberTicks; k++)
+                        //{
+                        //    if (k % 2 == 0)
+                        //        digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp;
+                        //    else
+                        //        digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
+                        //}
                     }
                     else // no US on even frames 
                     {
-                        for (k = 0; k < nNumberLines; k += nLinesPerPosition)
-                        {
-                            //anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
-                            //anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
-                            //anaWFM[i, j * nNumberLines + k + 2] = nPolModState2;
-                            //anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
-                        }
+                        for (k = 0; k < nNumberLines; k++)
+                            anaWFM[i, j * nNumberLines + k] = 0.0;
                     }
-                }
-            }
 
+                }
+
+            }
 
             anaWriter.WriteMultiSample(false, anaWFM);
             #endregion
@@ -1811,22 +1846,31 @@ namespace nOCT
 
                     // pol mod
                     i = 2;
+                    for (j = 0; j < nNumberFrames; j++)
+                    {
+                        for (k = 0; k < nNumberLines; k++)
+                        {
+                            anaWFM[i, j * nNumberLines + k] = nPolModState1;
+                        }
+                    }
+
+                    // US 
+                    i = 3;
+                    // anaWFM[i] = new DigitalWaveform(nNumberFrames * nNumberTicks, 1);
                     if (bNoUSFrames == false) // alter lines: PS and OCE on the same frame 
                     {
                         for (j = 0; j < nNumberFrames; j++)
                         {
-                            for (k = 0; k < nNumberLines; k += nLinesPerPosition)
+                            for (k = 0; k < nNumberLines; k++)
                             {
-                                anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
-                                //anaWFM[i, j * nNumberLines + k + 1] = nPolModState2;
-                                //anaWFM[i, j * nNumberLines + k + 2] = nPolModState1;
-                                //anaWFM[i, j * nNumberLines + k + 3] = nPolModState1;
-                                //anaWFM[i, j * nNumberLines + k + 4] = nPolModState2;
-                                //anaWFM[i, j * nNumberLines + k + 5] = nPolModState2;
-                                //anaWFM[i, j * nNumberLines + k + 6] = nPolModState2;
-                                //anaWFM[i, j * nNumberLines + k + 7] = nPolModState2;
+                                if (k % (nLinesPerUltrasound) == (nUSTriggerLineIndex))
+                                    anaWFM[i, j * nNumberLines + k] = 5.0;
+                                else
+                                    anaWFM[i, j * nNumberLines + k] = 0.0;
+
                             }
                         }
+
                     }
                     else // alter frames: PS and OCE on alternating frames 
                     {
@@ -1836,21 +1880,31 @@ namespace nOCT
                             {
                                 for (k = 0; k < nNumberLines; k++)
                                 {
-                                    // anaWFM[i, j * nNumberLines + k] = nPolModState2;
+                                    if (k % (2 * nLinesPerUltrasound) == (2 * nUSTriggerLineIndex))
+                                        anaWFM[i, j * nNumberLines + k] = 5.0;
+                                    else
+                                        anaWFM[i, j * nNumberLines + k] = 0.0;
+
                                 }
+
+                                //for (k = 0; k < nNumberTicks; k++)
+                                //{
+                                //    if (k % 2 == 0)
+                                //        digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceUp;
+                                //    else
+                                //        digWFM[i].Signals[0].States[j * nNumberTicks + k] = DigitalState.ForceDown;
+                                //}
                             }
                             else // no US on even frames 
                             {
-                                for (k = 0; k < nNumberLines; k += nLinesPerPosition)
-                                {
-                                    //anaWFM[i, j * nNumberLines + k + 0] = nPolModState1;
-                                    //anaWFM[i, j * nNumberLines + k + 1] = nPolModState1;
-                                    //anaWFM[i, j * nNumberLines + k + 2] = nPolModState2;
-                                    //anaWFM[i, j * nNumberLines + k + 3] = nPolModState2;
-                                }
+                                for (k = 0; k < nNumberLines; k++)
+                                    anaWFM[i, j * nNumberLines + k] = 0.0;
                             }
+
                         }
+
                     }
+
 
                     anaWriter.BeginWriteMultiSample(false, anaWFM, null, null);
                     #endregion
@@ -3101,6 +3155,7 @@ namespace nOCT
                                         Array.Clear(UIData.pfULLeft, 0, UIData.pfULLeft.Length);
                                         break;
                                     case 2: // IMAQ
+                                        float fSum = 0.0f;
                                         switch (UIData.nLLSystemType)
                                         {
                                             case 0: // SD-OCT
@@ -3111,8 +3166,14 @@ namespace nOCT
                                                 nAline = UIData.nULLeft;
                                                 if (nAline < 0) nAline = 0;
                                                 if (nAline >= threadData.nRawNumberAlines) nAline = threadData.nRawNumberAlines - 1;
+                                                
                                                 for (nPoint = 0; nPoint < threadData.nRawAlineLength; nPoint++)
+                                                {
                                                     UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
+                                                    fSum += UIData.pfULImage[nAline, nPoint];
+                                                }
+                                                UIData.fSpectrumSum = (float)Math.Round(fSum / 1000); 
+                                                fSum = 0.0f; 
 
                                                 #endregion
                                                 #region top
@@ -3215,7 +3276,10 @@ namespace nOCT
                                                         {
                                                             UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
                                                             UIData.pfULLeft[1, nPoint] = UIData.pfULImage[nAline + (threadData.nRawNumberAlines >> 1), nPoint];
+                                                            fSum += (UIData.pfULImage[nAline, nPoint] + UIData.pfULImage[nAline + (threadData.nRawNumberAlines >> 1), nPoint]);
                                                         }
+                                                        UIData.fSpectrumSum = (float)Math.Round(fSum / 1000);
+                                                        fSum = 0.0f;
                                                         break;
                                                     case 1:
                                                         nAline = nAlinePoint % (threadData.nRawNumberAlines >> 1);
@@ -3223,7 +3287,10 @@ namespace nOCT
                                                         {
                                                             UIData.pfULLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
                                                             UIData.pfULLeft[1, nPoint] = UIData.pfULImage[nAline + (threadData.nRawNumberAlines >> 1), nPoint];
+                                                            fSum += (UIData.pfULImage[nAline, nPoint] + UIData.pfULImage[nAline + (threadData.nRawNumberAlines >> 1), nPoint]);
                                                         }
+                                                        UIData.fSpectrumSum = (float)Math.Round(fSum / 1000);
+                                                        fSum = 0.0f;
                                                         break;
                                                     case 2:
                                                         nAline = nAlinePoint % (threadData.nRawNumberAlines >> 2);
@@ -3233,7 +3300,10 @@ namespace nOCT
                                                             UIData.pfULLeft[1, nPoint] = UIData.pfULImage[nAline + (threadData.nRawNumberAlines >> 2), nPoint];
                                                             UIData.pfULLeft[2, nPoint] = UIData.pfULImage[nAline + 2 * (threadData.nRawNumberAlines >> 2), nPoint];
                                                             UIData.pfULLeft[3, nPoint] = UIData.pfULImage[nAline + 3 * (threadData.nRawNumberAlines >> 2), nPoint];
+                                                            fSum += (UIData.pfULImage[nAline, nPoint] + UIData.pfULImage[nAline + (threadData.nRawNumberAlines >> 1), nPoint] + UIData.pfULImage[nAline + 2 * (threadData.nRawNumberAlines >> 2), nPoint] + UIData.pfULImage[nAline + 3 * (threadData.nRawNumberAlines >> 2), nPoint]);
                                                         }
+                                                        UIData.fSpectrumSum = (float)Math.Round(fSum / 1000);
+                                                        fSum = 0.0f;
                                                         break;
                                                 }   // switch (UIData.nULIMAQCameraIndex
                                                 #endregion
@@ -5514,7 +5584,7 @@ namespace nOCT
                                         fSum = 0.0f;
                                         for (int i = 0; i < 2 * nHalfAvgLineNumber; i++)
                                         {
-                                            fSum += UIData.pfULImage[nAline - nHalfAvgLineNumber + i, nPoint];
+                                            fSum += UIData.pfURImage[nAline - nHalfAvgLineNumber + i, nPoint];
                                         }
                                         fAvg = fSum / (2 * nHalfAvgLineNumber);
                                         UIData.pfURLeft[0, nPoint] = fAvg;
@@ -5523,7 +5593,7 @@ namespace nOCT
                                 else
                                 {
                                     for (nPoint = 0; nPoint < threadData.nProcessedAlineLength; nPoint++)
-                                        UIData.pfURLeft[0, nPoint] = UIData.pfULImage[nAline, nPoint];
+                                        UIData.pfURLeft[0, nPoint] = UIData.pfURImage[nAline, nPoint];
                                 }
                                 #endregion
 
@@ -5966,6 +6036,14 @@ namespace nOCT
             get { return _nULLeft; }
             set { _nULLeft = value; OnPropertyChanged(name_nULLeft); }
         }   // public int nULLeft
+
+        public string name_fSpectrumSum = "fSpectrumSum";
+        private float _fSpectrumSum;
+        public float fSpectrumSum
+        {
+            get { return _fSpectrumSum; }
+            set { _fSpectrumSum = value; OnPropertyChanged(name_fSpectrumSum); }
+        }   // public float fSpectrumSum
 
         public string name_nULLeftAvgNumLines = "nULLeftAvgNumLines";
         private int _nULLeftAvgNumLines;
@@ -7356,16 +7434,16 @@ namespace nOCT
 
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\NOIR_\\Desktop\\nOCT 1310 OCE new setup one camera\\dll\\nOCTImaq_OneCamera_20211216.dll")]
+        [DllImport("C:\\Users\\ONI\\Desktop\\nOCT 1310 OCE updated US trigger\\dll\\nOCTImaq_OneCamera_20211216.dll")]
         public static extern int InitializeImaq(char[] interfaceName0, int nImaqLineLength, int nLinesPerChunk, int errInfo);
 
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\NOIR_\\Desktop\\nOCT 1310 OCE new setup one camera\\dll\\nOCTImaq_OneCamera_20211216.dll")]
+        [DllImport("C:\\Users\\ONI\\Desktop\\nOCT 1310 OCE updated US trigger\\dll\\nOCTImaq_OneCamera_20211216.dll")]
         public static extern void StartAcquisition();
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\NOIR_\\Desktop\\nOCT 1310 OCE new setup one camera\\dll\\nOCTImaq_OneCamera_20211216.dll")]
+        [DllImport("C:\\Users\\ONI\\Desktop\\nOCT 1310 OCE updated US trigger\\dll\\nOCTImaq_OneCamera_20211216.dll")]
         public static extern void RealAcquisition0(int bufferIndex0, Int16[] pnTemp0, int nCounter);
 
         //[SuppressUnmanagedCodeSecurityAttribute()]
@@ -7373,7 +7451,7 @@ namespace nOCT
         //public static extern void RealAcquisition1(int bufferIndex1, Int16[] pnTemp1);
 
         [SuppressUnmanagedCodeSecurityAttribute()]
-        [DllImport("C:\\Users\\NOIR_\\Desktop\\nOCT 1310 OCE new setup one camera\\dll\\nOCTImaq_OneCamera_20211216.dll")]
+        [DllImport("C:\\Users\\ONI\\Desktop\\nOCT 1310 OCE updated US trigger\\dll\\nOCTImaq_OneCamera_20211216.dll")]
         public static extern void StopAcquisition();
 
         public void Dispose()

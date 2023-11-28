@@ -22,12 +22,14 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="30" />
                 <RowDefinition Height="250" />
+                <RowDefinition Height="10" />
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="450" />
                 <RowDefinition Height="30" />
-                <RowDefinition Height="420" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="30" />
-                <ColumnDefinition Width="250" />                
+                <ColumnDefinition Width="250" />
                 <ColumnDefinition Width="30" />
                 <ColumnDefinition Width="630" />
             </Grid.ColumnDefinitions>
@@ -251,16 +253,24 @@
 
             </Grid>
 
-            <CheckBox Grid.Column="0" Grid.Row="2" Name="chkULLeftActive" HorizontalAlignment="Right" VerticalAlignment="Bottom" IsChecked="{Binding bULLeftActive}" />
-            <TextBox Grid.Row="2" Grid.Column="1" Height="20" Width="50" HorizontalAlignment="Left" VerticalAlignment="Bottom" Name="txtULIMAQLeft" Text="{Binding nULLeft}" />
-            <TextBlock Grid.Row="2" Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="75,0,0,3" >average lines</TextBlock>
-            <TextBox Grid.Row="2" Grid.Column="1" Height="20" Width="50" HorizontalAlignment="Left" VerticalAlignment="Bottom" Name="txtULIMAQLeftAvgNumAlines" Text="{Binding nULLeftAvgNumLines}" Margin="150,0,0,0"  />
-            <ni:Graph Name="graphULLeft" RenderMode="Raster" Grid.ColumnSpan="4" Margin="-43,57,575,80.667" Grid.Row="3" >
+            <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="70,0,0,3" Height="16" Width="80" Grid.RowSpan="2" >spectrum sum:</TextBlock>
+            <TextBox Grid.Row="1" Grid.Column="1" Height="20" Width="50" HorizontalAlignment="Left" VerticalAlignment="Bottom" Name="txtULSpectrumSum" Text="{Binding fSpectrumSum}" Margin="150,0,0,0" Grid.RowSpan="2"/>
+            <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="200,0,0,3" Height="16" Width="40" Grid.RowSpan="2" >x1000</TextBlock>
+            <CheckBox Grid.Column="0" Grid.Row="2" Name="chkULLeftActive" HorizontalAlignment="Right" VerticalAlignment="Bottom" IsChecked="{Binding bULLeftActive}" Height="15" Width="16" Grid.RowSpan="2" />
+            <TextBox Grid.Row="2" Grid.Column="1" Height="20" Width="50" HorizontalAlignment="Left" VerticalAlignment="Bottom" Name="txtULIMAQLeft" Text="{Binding nULLeft}" Grid.RowSpan="2" />
+            <TextBlock Grid.Row="2" Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="70,0,0,3" Height="16" Width="69" Grid.RowSpan="2" >average lines</TextBlock>
+            <TextBox Grid.Row="2" Grid.Column="1" Height="20" Width="50" HorizontalAlignment="Left" VerticalAlignment="Bottom" Name="txtULIMAQLeftAvgNumAlines" Text="{Binding nULLeftAvgNumLines}" Margin="150,0,0,0" Grid.RowSpan="2"  />
+            <ni:Graph Name="graphULLeft" RenderMode="Raster" Grid.ColumnSpan="4" Margin="-43,62,563,98" Grid.Row="4" >
                 <ni:Graph.RenderTransform>
-                    <RotateTransform Angle="90"/>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform/>
+                        <RotateTransform Angle="90"/>
+                        <TranslateTransform X="29.884" Y="-4.586"/>
+                    </TransformGroup>
                 </ni:Graph.RenderTransform>
                 <ni:Graph.RenderTransformOrigin>
-                    <Point X="0.5" Y="0.5" />
+                    <Point>0.459,0.458</Point>
                 </ni:Graph.RenderTransformOrigin>
                 <ni:Graph.Axes>
                     <ni:AxisInt32 Orientation="Horizontal" Adjuster="None" Name="axisULLeftHorizontal" />
@@ -268,22 +278,23 @@
                 </ni:Graph.Axes>
             </ni:Graph>
 
-            <CheckBox Grid.Column="2" Grid.Row="0" Name="chkULTopActive" HorizontalAlignment="Right" VerticalAlignment="Bottom" IsChecked="{Binding bULTopActive}" />
+            <CheckBox Grid.Column="2" Grid.Row="0" Name="chkULTopActive" HorizontalAlignment="Right" VerticalAlignment="Bottom" IsChecked="{Binding bULTopActive}" Height="15" Width="16" />
             <TextBox Grid.Row="0" Grid.Column="3" Height="20" Width="50" HorizontalAlignment="Left" VerticalAlignment="Bottom" Name="txtULIMAQTop" Text="{Binding nULTop}" />
+            <TextBlock Grid.Row="0" Grid.Column="3" Grid.ColumnSpan="1" FontSize="24" FontWeight="Bold" TextAlignment="Center" >Ultrasound OCE (one camera)</TextBlock>
             <ni:Graph Grid.Row="1" Grid.Column="3" RenderMode="Raster" Name="graphULTop" >
                 <ni:Graph.Axes>
-                    <ni:AxisInt32 Orientation="Horizontal" MajorGridLines="{x:Null}" Visibility="Collapsed" Adjuster="None" Name="axisULTopHorizontal" />
-                    <ni:AxisSingle Orientation="Vertical" MajorGridLines="{x:Null}" Visibility="Collapsed" Adjuster="None" Name="axisULTopVertical" />
+                    <ni:AxisInt32 Orientation="Horizontal" Adjuster="None" Name="axisULTopHorizontal" />
+                    <ni:AxisSingle Orientation="Vertical"  Adjuster="None" Name="axisULTopVertical" />
                 </ni:Graph.Axes>
             </ni:Graph>
 
             <!--<Image Name="imageULMain" Grid.Row="2" Grid.Column="2" Stretch="None" >
             </Image>-->
 
-            <CheckBox Grid.Column="2" Grid.Row="2" Name="chkULMainActive" HorizontalAlignment="Right" VerticalAlignment="Bottom" IsChecked="{Binding bULMainActive}" />
-            <ni:IntensityGraph Grid.Row="3" Grid.Column="3" Name="graphULMain" DataSource="{Binding pfULImage}" RenderMode="Hardware" MouseDoubleClick="graphULMain_MouseDoubleClick"  >
+            <CheckBox Grid.Column="2" Grid.Row="2" Name="chkULMainActive" HorizontalAlignment="Right" VerticalAlignment="Bottom" IsChecked="{Binding bULMainActive}" Height="15" Width="16" Grid.RowSpan="2" />
+            <ni:IntensityGraph Grid.Row="4" Grid.Column="3" Name="graphULMain" DataSource="{Binding pfULImage}" RenderMode="Hardware" MouseDoubleClick="graphULMain_MouseDoubleClick" Margin="5,5,5,16"  >
                 <ni:IntensityGraph.Children>
-                    <ni:Cursor Name="cursorULMain" LabelVisibility="Collapsed" CrosshairBrush="Yellow" />
+                    <ni:Cursor Name="cursorULMain" CrosshairBrush="Yellow"/>
                 </ni:IntensityGraph.Children>
                 <ni:IntensityGraph.VerticalAxis>
                     <ni:AxisSingle IsInverted="True" MajorGridLines="{x:Null}" Name="axisULMainVertical" Adjuster="None" />
@@ -687,7 +698,7 @@
                             <TextBlock Grid.Row="2" Grid.Column="8" Grid.ColumnSpan="4" HorizontalAlignment="Center" VerticalAlignment ="Bottom">index</TextBlock>
                             <TextBox Grid.Row="3" Grid.Column="8" Name="txtURUSTriggerLineIndex" Text="{Binding nUROCEUSTriggerLineIndex}" />
                             <CheckBox Grid.Row="4" Grid.Column="2"  Grid.ColumnSpan="4"  HorizontalAlignment="Left" VerticalAlignment ="Top" Name="chkURAddNoUSFrames" IsChecked="{Binding bUROCEAddNoUSFrames}" >add no US frames</CheckBox>
-                            
+
                             <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="5" TextDecorations="Underline">graph display mode</TextBlock>
 
                             <RadioButton Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="4" GroupName="rbUROCEDisplayMode" 
@@ -1042,7 +1053,7 @@
                         <TextBox Grid.Column="13" Grid.Row="2" Name="txtLLFastGalvoStart" Text="{Binding fLLFastGalvoStart}" />
                         <TextBox Grid.Column="15" Grid.Row="2" Name="txtLLFastGalvoStop" Text="{Binding fLLFastGalvoStop}" />
                         <TextBlock Grid.Column="12" Grid.Row="3">flyback rounding</TextBlock>
-                        <TextBox Grid.Column="13" Grid.ColumnSpan="1" Grid.Row="3" Name="txtLLFastScanRounding" Text="{Binding nLLFastScanRounding}" />                        
+                        <TextBox Grid.Column="13" Grid.ColumnSpan="1" Grid.Row="3" Name="txtLLFastScanRounding" Text="{Binding nLLFastScanRounding}" />
                         <TextBlock Grid.Column="12" Grid.Row="4">Slow Galvo (Start, Stop) in V</TextBlock>
                         <TextBox Grid.Column="13" Grid.Row="4" Name="txtLLLLSlowGalvoStart" Text="{Binding fLLSlowGalvoStart}" />
                         <TextBox Grid.Column="15" Grid.Row="4" Name="txtLLSlowGalvoStop" Text="{Binding fLLSlowGalvoStop}" />
